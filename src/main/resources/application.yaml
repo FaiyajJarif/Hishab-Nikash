@@ -1,13 +1,11 @@
 spring:
   application:
     name: budget
-
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
     password: 12345
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,11 +13,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
   flyway:
     enabled: true
     baseline-on-migrate: true
-
   mail:
     host: smtp.gmail.com
     port: 587
@@ -31,6 +27,15 @@ spring:
           auth: true
           starttls:
             enable: true
-
+  logging:
+  level:
+    org.springframework.mail: DEBUG
+    org.springframework.boot.autoconfigure.mail: DEBUG
+    jakarta.mail: DEBUG
+app:
+  jwt:
+    secret: "a8f9d7s6d5f4g3h2j1k0l9p8o7i6u5y4t3r2e1w"
+    access-token-minutes: 60
+    remember-token-days: 7
 server:
   port: 8080
