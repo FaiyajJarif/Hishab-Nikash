@@ -1,0 +1,398 @@
+/* =========================
+  GLOBAL RESET
+========================= */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+:root {
+  --primary: #3b82f6;
+  --primary2: #6366f1;
+  --accent: #22c55e;
+  --text: #0f172a;
+  --muted: #64748b;
+  --card: rgba(255, 255, 255, 0.75);
+  --stroke: rgba(255, 255, 255, 0.35);
+  --shadow: 0 18px 45px rgba(2, 6, 23, 0.18);
+}
+
+/* =========================
+  BACKGROUND
+========================= */
+.main {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+
+  /* lively gradient + image blend */
+  background:
+    radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.35), transparent 45%),
+    radial-gradient(circle at 90% 20%, rgba(59, 130, 246, 0.35), transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(34, 197, 94, 0.25), transparent 45%),
+    linear-gradient(135deg, rgba(203,198,198,0.50), rgba(208,204,204,0.50)),
+    url(loginLogo.jpg);
+
+  background-size: cover;
+  background-position: center;
+}
+
+/* optional floating blobs for modern vibe */
+.main::before,
+.main::after {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.35;
+  z-index: 0;
+}
+
+.main::before {
+  background: #3b82f6;
+  top: -120px;
+  left: -120px;
+}
+
+.main::after {
+  background: #22c55e;
+  bottom: -140px;
+  right: -140px;
+}
+
+/* keep everything above background */
+.loginPage,
+.loginSetup {
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================
+  TOP BRAND
+========================= */
+.loginPage {
+  padding: 24px 24px 0;
+}
+
+.loginPage .icon h1 {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: rgba(15, 23, 42, 0.9);
+  cursor: pointer;
+  display: inline-block;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.loginPage .icon h1:hover {
+  transform: translateY(-2px);
+  color: var(--primary);
+}
+
+/* =========================
+  LAYOUT
+========================= */
+.loginSetup {
+  max-width: 1200px;
+  margin: 60px auto 0;
+  padding: 40px 24px;
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+}
+
+/* =========================
+  LEFT SIDE
+========================= */
+.loginSetup .setUp-left {
+  color: rgba(15, 23, 42, 0.9);
+}
+
+.loginSetup .setUp-left .logo-img {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.18);
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  margin-bottom: 18px;
+}
+
+.loginSetup .setUp-left h1 {
+  font-size: 52px;
+  line-height: 1.1;
+  margin-bottom: 18px;
+  font-weight: 800;
+}
+
+.loginSetup .setUp-left .oneS {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.loginSetup .setUp-left .twoS {
+  background: linear-gradient(90deg, var(--primary), var(--primary2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.loginSetup .setUp-left p {
+  font-size: 18px;
+  line-height: 1.7;
+  color: rgba(30, 41, 59, 0.85);
+  max-width: 520px;
+}
+
+/* =========================
+  RIGHT CARD (LOGIN)
+========================= */
+.loginSetup .setUp-right {
+  width: 100%;
+  border-radius: 18px;
+  padding: 28px 26px;
+
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.loginSetup .setUp-right h2 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: rgba(15, 23, 42, 0.9);
+  margin-bottom: 6px;
+}
+
+/* error + success spacing */
+#login-error,
+#resend-message {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* =========================
+  INPUTS
+========================= */
+.loginSetup .setUp-right input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.85);
+  color: rgba(15, 23, 42, 0.9);
+  font-size: 14px;
+  outline: none;
+  transition: all 0.25s ease;
+  margin-top: 10px;
+}
+
+.loginSetup .setUp-right input::placeholder {
+  color: rgba(100, 116, 139, 0.85);
+}
+
+.loginSetup .setUp-right input:focus {
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
+  transform: translateY(-1px);
+}
+
+.loginSetup .setUp-right h2 {
+    text-align: center;
+    width: 100%;
+  }
+  
+
+/* =========================
+  REMEMBER ROW
+========================= */
+.loginSetup .setUp-right .remember-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  
+  .loginSetup .setUp-right .remember-container .remember-box {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    accent-color: var(--primary);
+    margin-bottom: 10px;
+  }
+  
+  .loginSetup .setUp-right .remember-container .remember-text {
+    font-size: 13px;
+    color: rgba(51, 65, 85, 0.85);
+    user-select: none;
+  }
+  
+  .loginSetup .setUp-right .remember-container .forgot {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+  }
+  
+  .loginSetup .setUp-right .remember-container .forgot:hover {
+    text-decoration: underline;
+  }
+  
+
+/* =========================
+  BUTTONS (modern)
+========================= */
+.loginSetup .setUp-right .logbtn {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  color: white;
+
+  background: linear-gradient(135deg, var(--primary), var(--primary2));
+  box-shadow: 0 14px 28px rgba(59, 130, 246, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.loginSetup .setUp-right .logbtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(59, 130, 246, 0.45);
+  filter: brightness(1.04);
+}
+
+.loginSetup .setUp-right .logbtn:active {
+  transform: translateY(0px) scale(0.99);
+}
+
+/* resend button smaller but same style */
+.loginSetup .setUp-right button[onclick*="handleResendVerification"] {
+  height: 42px !important;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(16, 185, 129, 0.95));
+  box-shadow: 0 14px 28px rgba(34, 197, 94, 0.25);
+}
+
+/* =========================
+  SIGNUP LINK + DIVIDER
+========================= */
+.loginSetup .setUp-right .link {
+  font-size: 14px;
+  color: rgba(30, 41, 59, 0.75);
+}
+
+.loginSetup .setUp-right .signup {
+  font-weight: 800;
+  color: var(--primary);
+  cursor: pointer;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.loginSetup .setUp-right .signup:hover {
+  transform: translateY(-1px);
+  text-decoration: underline;
+}
+
+.line-with-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.line-with-or::before,
+.line-with-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.line-with-or span {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(100, 116, 139, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* =========================
+  SOCIAL BUTTON
+========================= */
+.iconSocial {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+}
+
+.social-btn {
+  width: 100%;
+  height: 46px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.social-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.12);
+}
+
+/* =========================
+  RESPONSIVE
+========================= */
+@media (max-width: 980px) {
+  .loginSetup {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    margin-top: 30px;
+  }
+
+  .loginSetup .setUp-left h1 {
+    font-size: 40px;
+  }
+}
+
+@media (max-width: 520px) {
+  .loginSetup {
+    padding: 26px 16px;
+  }
+
+  .loginSetup .setUp-left h1 {
+    font-size: 34px;
+  }
+
+  .loginPage {
+    padding: 18px 16px 0;
+  }
+}

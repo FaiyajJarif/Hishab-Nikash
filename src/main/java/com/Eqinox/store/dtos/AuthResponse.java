@@ -9,16 +9,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApiResponse {
+public class AuthResponse {
 
     private boolean success;
     private String message;
-
-    public static ApiResponse success(String message) {
-        return new ApiResponse(true, message);
-    }
-
-    public static ApiResponse failure(String message) {
-        return new ApiResponse(false, message);
-    }
+    private String token;
 }

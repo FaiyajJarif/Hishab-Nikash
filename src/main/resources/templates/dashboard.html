@@ -1,33 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Document</title>
-    <link rel = "stylesheet" href = "stylesAlogHomePage.css">
+    <link rel="stylesheet" href="dashboard.css">
 </head>
+
 <body>
 
     <div class="container">
 
-        <div class="left">
-
+        <!-- ASIDE -->
+        <aside class="left">
             <button class="dropdown-btn" onclick="togglePanel()">
                 <div class="menu-title">
                     <img src="Images/LogoN.png" class="logo-img" alt="MLB Logo">
-                    <span class="menu-text">Faiyaj's Plan ▼</span>
+                    <span class="menu-text" id="plan-title">My Plan ▼</span>
                 </div>
-            </button>            
-    
+            </button>
             <div id="planPanel" class="dropdown-panel">
                 <span class="new">
                     <ion-icon name="add-circle"></ion-icon>
                     <span class="new-text">New Plan</span>
-                </span>  
+                </span>
                 <span class="folder">
                     <ion-icon name="folder"></ion-icon>
                     <span class="folder-text">View All Plans</span>
                 </span>
                 <hr class="line1">
-
                 <p class="lab2">Current Plan</p>
                 <span class="settings">
                     <ion-icon name="settings"></ion-icon>
@@ -44,56 +44,360 @@
                 <span class="newstart">
                     <ion-icon name="leaf"></ion-icon>
                     <span class="newstart-text">Fresh Start</span>
-                </span>   
+                </span>
                 <hr class="line2">
                 <p class="lab3">Account</p>
                 <span class="family">
                     <ion-icon name="people"></ion-icon>
                     <span class="family-text">Family Sharing</span>
                 </span>
-                
                 <span class="bank">
                     <ion-icon name="card"></ion-icon>
                     <span class="bank-text">Manage Bank Connections</span>
                 </span>
-
                 <hr class="line3">
-                
-                <span class="logout">
+                <span class="logout" onclick="logout()">
                     <ion-icon name="log-out"></ion-icon>
                     <span class="logout-text">Logout</span>
                 </span>
-
                 <hr class="line4">
                 <p class="lab1">Legal</p>
                 <span class="privacy-policy">
                     <ion-icon name="shield-checkmark"></ion-icon>
                     <span class="privacy-policy-text">Privacy Policy</span>
                 </span>
-                
                 <span class="privacy-choice">
                     <ion-icon name="lock-closed"></ion-icon>
                     <span class="privacy-choice-text">Privacy Choices</span>
                 </span>
-                           
             </div>
-        </div>
-    
-        <div class="right">
-            <h1>Welcome</h1>
-        </div>
-    
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+
+            <!-- DATE NAVIGATION -->
+            <div class="date-header">
+                <button class="date-btn" onclick="prevPeriod()">‹</button>
+
+                <div class="date-info">
+                    <h2 id="current-period">September 2026</h2>
+                    <span class="date-sub">Monthly Budget</span>
+                </div>
+
+                <button class="date-btn" onclick="nextPeriod()">›</button>
+            </div>
+
+            <!-- GOAL CARD -->
+            <div class="goal-card">
+                <div class="goal-info">
+                    <h3>Budget Goal</h3>
+                    <p>Set a spending goal for this month</p>
+                </div>
+
+                <div class="goal-input">
+                    ৳
+                    <input type="number" placeholder="0" />
+                    <button>Save</button>
+                </div>
+            </div>
+
+            <!-- CATEGORIES -->
+            <div id="category-list" class="category-list"></div>
+
+        </main>
+
+        <!-- RIGHT SIDEBAR (NEW) -->
+        <aside class="right-panel">
+
+            <div class="summary-card" id="target-panel">
+                <h3 id="target-title">Select a category</h3>
+
+                <div class="target-block">
+                    <select id="targetType">
+                        <option value="MONTHLY">Monthly</option>
+                        <option value="WEEKLY">Weekly</option>
+                        <option value="DAILY">Daily</option>
+                        <option value="YEARLY">Yearly</option>
+                        <option value="CUSTOM">Custom</option>
+                    </select>
+
+                    <input id="targetAmount" type="number" placeholder="Amount" />
+                    <button onclick="saveTarget()">Create Target</button>
+                </div>
+            </div>
+
+        </aside>
+        <strong class="success">৳ 10,800</strong>
+
+
     </div>
 
 
     <script>
-    function togglePanel() {
-        const panel = document.getElementById("planPanel");
-        panel.classList.toggle("open");
-    }
+        let selectedCategoryId = null;
+        let selectedCategoryName = null;
     </script>
-    
-    <script src = "https://unpkg.com/ionicons@5.4.0/dist/ionicons.js"></script>
+    <script>
+        function togglePanel() {
+            const panel = document.getElementById("planPanel");
+            panel.classList.toggle("open");
+        }
+    </script>
+    <script>
+        function logout() {
+            localStorage.clear(); // clears all app data
+            window.location.href = "/login";
+        }
 
+    </script>
+
+
+    <script src="https://unpkg.com/ionicons@5.4.0/dist/ionicons.js"></script>
+
+    <script>
+        async function saveTarget() {
+            if (!selectedCategoryId) {
+                alert("Select a category first");
+                return;
+            }
+
+            const amount = document.getElementById("targetAmount").value;
+            const frequency = document.getElementById("targetType").value;
+            const token = localStorage.getItem("auth_token");
+
+            if (!amount) return;
+
+            await fetch("/api/budget/target", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    categoryId: selectedCategoryId,
+                    month: currentMonth + 1,
+                    year: currentYear,
+                    amount: amount,
+                    frequency: frequency
+                })
+            });
+
+            alert(`Target saved for ${selectedCategoryName}`);
+            loadCategories();
+        }
+    </script>
+    <script>
+        (async function () {
+            const token = localStorage.getItem("auth_token");
+
+            // No token → go to login
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/me", {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                // Token invalid / expired
+                if (res.status === 401 || res.status === 403) {
+                    localStorage.removeItem("auth_token");
+                    window.location.href = "/login";
+                    return;
+                }
+
+                const user = await res.json();
+
+                const nameRes = await fetch("/api/dashboard-name", {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                const nameData = await nameRes.json();
+
+                document.getElementById("plan-title").innerText =
+                    `${nameData.name}'s Plan ▼`;
+
+
+
+                // Optional: show user name
+                console.log("Logged in as:", user.name);
+
+                // Example:
+                // document.getElementById("username").innerText = user.name;
+
+            } catch (err) {
+                console.error(err);
+                localStorage.removeItem("auth_token");
+                window.location.href = "/login";
+            }
+        })();
+    </script>
+    <script>
+        function calculateProgress(available, target) {
+            if (!target || target <= 0) return 0;
+            return Math.min((available / target) * 100, 100);
+        }
+
+        function getProgressClass(available, target) {
+            if (!target) return "neutral";
+            if (available < 0) return "overspent";
+            if (available < target) return "warning";
+            return "success";
+        }
+    </script>
+    <script>
+        async function loadCategories() {
+            const token = localStorage.getItem("auth_token");
+            const container = document.getElementById("category-list");
+
+            const res = await fetch(
+                `/api/dashboard/categories?month=${currentMonth + 1}&year=${currentYear}`,
+                {
+                    headers: { "Authorization": "Bearer " + token }
+                }
+            );
+
+            const data = await res.json();
+            container.innerHTML = "";
+
+            Object.keys(data).forEach(parent => {
+                const section = document.createElement("div");
+                section.className = "category-section";
+
+                const title = document.createElement("h3");
+                title.innerText = parent;
+                section.appendChild(title);
+
+                const list = document.createElement("div");
+                list.className = "category-list-rows";
+
+                data[parent].forEach(child => {
+                    const row = document.createElement("div");
+                    row.className = "category-row";
+                    const progress =
+                        calculateProgress(child.available, child.target);
+
+                    const progressClass =
+                        getProgressClass(child.available, child.target);
+
+                    row.innerHTML = `
+                    <div class="row-progress">
+                        <div class="progress-bar ${progressClass}"
+                            style="width: ${progress}%">
+                        </div>
+                    </div>
+
+                <div class="category-name">${child.name}</div>
+
+                <div class="category-budget">
+                    ৳ <input
+                        type="number"
+                        value="${child.planned ?? ''}"
+                        onblur="savePlannedAmount(this)"
+                        data-category-id="${child.id}"
+                    />
+                    <span class="per">/ month</span>
+                </div>
+
+                <div class="category-available">
+                    ৳ ${child.available}
+                </div>
+                `;
+
+                    if (child.available < 0) {
+                        row.classList.add("overspent");
+                    }
+                    // ✅ SELECT CATEGORY (YNAB behavior)
+                    row.addEventListener("click", () => {
+                        selectedCategoryId = child.id;
+                        selectedCategoryName = child.name;
+
+                        document.getElementById("target-title").innerText =
+                            `Target for ${child.name}`;
+
+                        // highlight selected row
+                        document
+                            .querySelectorAll(".category-row")
+                            .forEach(r => r.classList.remove("active"));
+
+                        row.classList.add("active");
+                    });
+
+                    list.appendChild(row);
+                });
+                section.appendChild(list);
+                container.appendChild(section);
+            });
+        }
+
+        loadCategories();
+    </script>
+    <script>
+        let currentMonth = new Date().getMonth(); // 0-based
+        let currentYear = new Date().getFullYear();
+
+        function updateHeader() {
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            document.getElementById("current-period").innerText =
+                `${monthNames[currentMonth]} ${currentYear}`;
+        }
+
+        function prevPeriod() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateHeader();
+            loadCategories();
+        }
+
+        function nextPeriod() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateHeader();
+            loadCategories();
+        }
+        updateHeader();
+        loadCategories();
+    </script>
+    <script>
+        async function savePlannedAmount(input) {
+            const amount = input.value;
+            const categoryId = input.dataset.categoryId;
+            const token = localStorage.getItem("auth_token");
+
+            if (amount === "") return;
+
+            await fetch("/api/budget/plan", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    categoryId: categoryId,
+                    amount: amount
+                })
+            });
+
+            // reload to update available & progress
+            loadCategories();
+        }
+    </script>
 </body>
+
 </html>

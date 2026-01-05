@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Hishab Nikash</title>
+    <link rel="stylesheet" href="/onboarding.css">
+</head>
+
+<body>
+
+    <div class="onboarding-container">
+
+        <!-- Progress -->
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <!-- Slides Wrapper -->
+        <div class="slides">
+
+            <!-- SLIDE 1 -->
+            <section class="slide active">
+                <h1>Let’s get started 👋</h1>
+                <p>What should we call you?</p>
+                <input type="text" placeholder="Your name" />
+                <button class="next">Next</button>
+            </section>
+
+            <!-- STEP 1: Subscriptions -->
+            <section class="slide">
+                <h1>Your subscriptions</h1>
+                <p>Select what you currently pay for</p>
+                <div class="options multi" data-category="subscription">
+                    <button>Music</button>
+                    <button>TV / Streaming</button>
+                    <button>Fitness</button>
+                    <button>Cloud Storage</button>
+                </div>
+                <button class="next">Next</button>
+            </section>
+
+            <!-- STEP 2: Goals -->
+            <section class="slide">
+                <h1>Future goals</h1>
+                <p>What are you saving for?</p>
+                <div class="options multi" data-category="goal">
+                    <button>Wedding</button>
+                    <button>New House</button>
+                    <button>New Car</button>
+                    <button>Education</button>
+                </div>
+                <button class="next">Next</button>
+            </section>
+
+            <!-- STEP 3: Lifestyle -->
+            <section class="slide">
+                <h1>Lifestyle spending</h1>
+                <p>What do you enjoy spending money on?</p>
+                <div class="options multi" data-category="lifestyle">
+                    <button>Travel</button>
+                    <button>Gardening</button>
+                    <button>Books</button>
+                    <button>Gaming</button>
+                </div>
+                <button class="next">Next</button>
+            </section>
+
+            <!-- SLIDE 4 -->
+            <section class="slide">
+                <h1>Welcome aboard 🎉</h1>
+                <p>We’re building your personalized plan.</p>
+                <button class="finish">Go to Dashboard</button>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="/onboarding.js"></script>
+</body>
+
+</html>

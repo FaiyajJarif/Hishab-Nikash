@@ -4,7 +4,7 @@
 }
 
 .container {
-    height: 100vh;
+    height: 250vh;
     display: flex;
     flex-direction: row;
 }
@@ -104,7 +104,78 @@ ion-icon {
 
 .right {
     width: 80%;
-    background-image: url("White.jpg");
-    background-size: cover;
-    background-position: center;
+    padding: 40px;
+}
+
+/* Section */
+.right .category-section {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+/* Section headers */
+.right .category-section h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid rgba(0,0,0,0.08);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Rows container */
+.right .category-list-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Single row */
+.right .category-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    padding: 14px 18px;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    transition: background 0.2s, transform 0.2s;
+}
+
+.right .category-row:hover {
+    background: #764ba2;
+    transform: translateY(-2px);
+}
+
+/* Name */
+.right .category-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Budget input */
+.right .category-budget {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.right .category-budget input {
+    width: 90px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.right .category-budget input:focus {
+    outline: none;
+    border-color: #764ba2;
+}
+
+.right .per {
+    font-size: 12px;
+    opacity: 0.7;
 }

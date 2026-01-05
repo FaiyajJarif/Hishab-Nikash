@@ -24,13 +24,25 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: "faiyaj.jarif01@gmail.com"
-    password: "zhjh mvvj hvgj walz"
+    password: "vsns zwns gphe afgx"
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+
+  logging:
+  level:
+    org.springframework.mail: DEBUG
+    org.springframework.boot.autoconfigure.mail: DEBUG
+    jakarta.mail: DEBUG
+
+app:
+  jwt:
+    secret: "a8f9d7s6d5f4g3h2j1k0l9p8o7i6u5y4t3r2e1w"
+    access-token-minutes: 60
+    remember-token-days: 7
 
 server:
   port: 8080

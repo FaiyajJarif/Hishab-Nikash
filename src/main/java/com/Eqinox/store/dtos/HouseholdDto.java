@@ -5,7 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ResendVerificationRequest {
-
-    private String email;
+public class HouseholdDto {
+    private String memberType;
+    private Integer count;
 }
+
