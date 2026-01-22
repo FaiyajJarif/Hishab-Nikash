@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Document</title>
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- ASIDE -->
+        <aside class="left">
+            <button class="dropdown-btn" onclick="togglePanel()">
+                <div class="menu-title">
+                    <img src="Images/LogoN.png" class="logo-img" alt="MLB Logo">
+                    <span class="menu-text" id="plan-title">My Plan ▼</span>
+                </div>
+            </button>
+            <div id="planPanel" class="dropdown-panel">
+                <span class="new">
+                    <ion-icon name="add-circle"></ion-icon>
+                    <span class="new-text">New Plan</span>
+                </span>
+                <span class="folder">
+                    <ion-icon name="folder"></ion-icon>
+                    <span class="folder-text">View All Plans</span>
+                </span>
+                <hr class="line1">
+                <p class="lab2">Current Plan</p>
+                <span class="settings">
+                    <ion-icon name="settings"></ion-icon>
+                    <span class="settings-text">Plan Settings</span>
+                </span>
+                <span class="manage">
+                    <ion-icon name="construct"></ion-icon>
+                    <span class="manage-text">Manage Transaction</span>
+                </span>
+                <span class="export">
+                    <ion-icon name="document"></ion-icon>
+                    <span class="export-text">Export Plan</span>
+                </span>
+                <span class="newstart">
+                    <ion-icon name="leaf"></ion-icon>
+                    <span class="newstart-text">Fresh Start</span>
+                </span>
+                <hr class="line2">
+                <p class="lab3">Account</p>
+                <span class="family">
+                    <ion-icon name="people"></ion-icon>
+                    <span class="family-text">Family Sharing</span>
+                </span>
+                <span class="bank">
+                    <ion-icon name="card"></ion-icon>
+                    <span class="bank-text">Manage Bank Connections</span>
+                </span>
+                <hr class="line3">
+                <span class="logout" onclick="logout()">
+                    <ion-icon name="log-out"></ion-icon>
+                    <span class="logout-text">Logout</span>
+                </span>
+                <hr class="line4">
+                <p class="lab1">Legal</p>
+                <span class="privacy-policy">
+                    <ion-icon name="shield-checkmark"></ion-icon>
+                    <span class="privacy-policy-text">Privacy Policy</span>
+                </span>
+                <span class="privacy-choice">
+                    <ion-icon name="lock-closed"></ion-icon>
+                    <span class="privacy-choice-text">Privacy Choices</span>
+                </span>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+
+            <!-- DATE NAVIGATION -->
+            <div class="date-header">
+                <button class="date-btn" onclick="prevPeriod()">‹</button>
+
+                <div class="date-info">
+                    <h2 id="current-period">September 2026</h2>
+                    <span class="date-sub">Monthly Budget</span>
+                </div>
+
+                <button class="date-btn" onclick="nextPeriod()">›</button>
+            </div>
+
+            <!-- GOAL CARD -->
+            <div class="goal-card">
+                <div class="goal-info">
+                    <h3>Monthly Budget</h3>
+                    <p>Income, assigned, and remaining</p>
+                </div>
+
+                <div class="goal-input">
+                    <div>
+                        Income<br>
+                        ৳ <input id="monthlyIncome" type="number" placeholder="0" />
+                    </div>
+
+                    <div>
+                        Assigned<br>
+                        ৳ <span id="assignedAmount">0</span>
+                    </div>
+
+                    <div>
+                        Remaining<br>
+                        ৳ <span id="remainingAmount">0</span>
+                    </div>
+
+                    <button onclick="saveIncome()">Save</button>
+                </div>
+            </div>
+            <!-- CATEGORIES HEADER -->
+            <div style="margin-bottom: 1rem;">
+                <button onclick="openAddCategory()" class="add-category-btn">
+                    + Add Category
+                </button>
+            </div>
+
+            <!-- RECURRING BILLS -->
+            <div class="category-section" id="recurring-bills-section">
+
+                <h3>Recurring Bills</h3>
+
+                <!-- ADD BILL FORM -->
+                <div class="goal-card" style="margin-bottom: 1.5rem;">
+                    <div class="goal-info">
+                        <p id="selected-category-label" style="font-size:0.85rem;color:#666">
+                            No category selected
+                        </p>
+                        <h3>Add Recurring Bill</h3>
+                        <p>Automatically deducted on due date</p>
+                    </div>
+
+                    <div class="goal-input">
+                        <input id="billName" type="text" placeholder="Bill name" />
+                        <input id="billAmount" type="number" placeholder="Amount" />
+
+                        <select id="billFrequency">
+                            <option value="MONTHLY">Monthly</option>
+                            <option value="WEEKLY">Weekly</option>
+                        </select>
+
+                        <input id="billDate" type="date" />
+                        <button onclick="addRecurringBill()">Add</button>
+                    </div>
+                </div>
+
+                <!-- BILL LIST -->
+                <div id="recurringBillList" class="category-list-rows"></div>
+
+            </div>
+
+            <!-- CATEGORIES -->
+            <div id="category-list" class="category-list"></div>
+
+        </main>
+
+        <!-- RIGHT SIDEBAR (NEW) -->
+        <aside class="right-panel">
+
+            <div class="summary-card" id="target-panel">
+                <h3 id="target-title">Select a category</h3>
+
+                <div class="target-block">
+                    <select id="targetType">
+                        <option value="MONTHLY">Monthly</option>
+                        <option value="WEEKLY">Weekly</option>
+                        <option value="DAILY">Daily</option>
+                        <option value="YEARLY">Yearly</option>
+                        <option value="CUSTOM">Custom</option>
+                    </select>
+
+                    <input id="targetAmount" type="number" placeholder="Amount" />
+                    <button onclick="saveTarget()">Create Target</button>
+                </div>
+            </div>
+            <div class="summary-card" id="bill-control-panel">
+                <h3 id="bill-control-title">Select a bill</h3>
+
+                <div class="target-block">
+                    <button onclick="toggleBillStatus()">Enable / Disable</button>
+                    <button onclick="deleteBill()" style="margin-top: 0.6rem;">Delete</button>
+                </div>
+            </div>
+            <div class="summary-card" id="alerts-panel">
+                <h3>Alerts</h3>
+                <div id="alertsList" class="alerts-list">
+                    <div class="alert muted">No alerts yet</div>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script>
+        let selectedCategoryId = null;
+        let selectedCategoryName = null;
+        let remainingAmount = 0;
+        let selectedBillId = null;
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+    </script>
+    <script>
+        async function safeFetch(url, options = {}, retry = true) {
+            const res = await fetch(url, options);
+
+            if ((res.status === 401 || res.status === 403) && retry) {
+                console.warn("⚠️ Auth retry for:", url);
+                await new Promise(r => setTimeout(r, 300));
+                return safeFetch(url, options, false);
+            }
+
+            return res;
+        }
+    </script>
+    <script>
+        function togglePanel() {
+            const panel = document.getElementById("planPanel");
+            panel.classList.toggle("open");
+        }
+    </script>
+    <script>
+        function logout() {
+            localStorage.clear(); // clears all app data
+            window.location.href = "/login";
+        }
+
+    </script>
+
+
+    <script src="https://unpkg.com/ionicons@5.4.0/dist/ionicons.js"></script>
+
+    <script>
+        async function saveTarget() {
+            if (!selectedCategoryId) {
+                alert("Select a category first");
+                return;
+            }
+
+            const amount = document.getElementById("targetAmount").value;
+            const frequency = document.getElementById("targetType").value;
+            const token = localStorage.getItem("auth_token");
+
+            if (!amount) return;
+
+            await fetch("/api/budget/target", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    categoryId: selectedCategoryId,
+                    month: currentMonth + 1,
+                    year: currentYear,
+                    amount: amount,
+                    frequency: frequency
+                })
+            });
+
+            alert(`Target saved for ${selectedCategoryName}`);
+            loadCategories();
+        }
+    </script>
+    <script>
+        function calculateProgress(planned, target) {
+            if (!target || target <= 0) return 0;
+            return Math.min((planned / target) * 100, 100);
+        }
+
+        function getProgressClass(available, target) {
+            if (!target) return "neutral";
+            if (available < 0) return "overspent";
+            if (available < target) return "warning";
+            return "success";
+        }
+    </script>
+    <script>
+        async function loadCategories() {
+          await loadSummary();
+      
+          const token = localStorage.getItem("auth_token");
+          const container = document.getElementById("category-list");
+      
+          const res = await safeFetch(
+            `/api/dashboard/categories?month=${currentMonth + 1}&year=${currentYear}`,
+            { headers: { "Authorization": "Bearer " + token } }
+          );
+      
+          const json = await res.json();
+      
+          // ✅ unwrap ApiResponse if present
+          const data = json?.data ?? json;
+      
+          container.innerHTML = "";
+      
+          // ✅ Hard guard: if data is not an object, stop
+          if (!data || typeof data !== "object") {
+            console.warn("categories response not an object:", data);
+            return;
+          }
+      
+          Object.keys(data).forEach(parent => {
+            const rows = data[parent];
+      
+            // ✅ rows MUST be an array
+            if (!Array.isArray(rows)) {
+              console.warn(`Expected array for group "${parent}", got:`, rows);
+              return;
+            }
+      
+            const section = document.createElement("div");
+            section.className = "category-section";
+      
+            const title = document.createElement("h3");
+            title.innerText = parent;
+            section.appendChild(title);
+      
+            const list = document.createElement("div");
+            list.className = "category-list-rows";
+      
+            rows.forEach(child => {
+              const row = document.createElement("div");
+              row.className = "category-row";
+      
+              const progress = calculateProgress(child.planned, child.target);
+              const progressClass = getProgressClass(child.available, child.target);
+      
+              row.innerHTML = `
+                <div class="row-progress">
+                  <div class="progress-bar ${progressClass}" style="width: ${progress}%"></div>
+                </div>
+      
+                <div class="category-name">
+                  ${child.name}
+                  ${child.target > 0 ? `
+                    <div class="category-target">
+                      Assigned: ${child.planned} / ${child.target}
+                    </div>
+                  ` : ``}
+                </div>
+      
+                <div class="category-budget">
+                  ৳ <input
+                    type="number"
+                    value="${child.planned ?? ''}"
+                    data-prev="${child.planned ?? 0}"
+                    onblur="savePlannedAmount(this)"
+                    data-category-id="${child.id}"
+                  />
+                  <span class="per">/ month</span>
+                </div>
+      
+                <div class="category-available">
+                  ৳ ${child.available}
+                </div>
+              `;
+      
+              row.querySelector("input").addEventListener("click", e => e.stopPropagation());
+      
+              if (child.available < 0) row.classList.add("overspent");
+      
+              row.addEventListener("click", () => {
+                selectedCategoryId = child.id;
+                selectedCategoryName = child.name;
+      
+                document.getElementById("target-title").innerText = `Target for ${child.name}`;
+                document.getElementById("selected-category-label").innerText = `Category: ${child.name}`;
+      
+                document.querySelectorAll(".category-row").forEach(r => r.classList.remove("active"));
+                row.classList.add("active");
+              });
+      
+              list.appendChild(row);
+            });
+      
+            section.appendChild(list);
+            container.appendChild(section);
+          });
+        }
+      </script>
+      
+    <script>
+        function updateHeader() {
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            document.getElementById("current-period").innerText =
+                `${monthNames[currentMonth]} ${currentYear}`;
+        }
+
+        function prevPeriod() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateHeader();
+            loadSummary();
+            loadCategories();
+        }
+
+        function nextPeriod() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateHeader();
+            loadSummary();
+            loadCategories();
+        }
+        updateHeader();
+        loadCategories();
+    </script>
+    <script>
+        async function savePlannedAmount(input) {
+            const newAmount = Number(input.value);
+            const previousAmount = Number(input.getAttribute("data-prev")) || 0;
+            const categoryId = input.dataset.categoryId;
+            const token = localStorage.getItem("auth_token");
+
+            // calculate delta
+            const delta = newAmount - previousAmount;
+
+            // 🚫 Remaining guard
+            if (delta > remainingAmount) {
+                alert("Not enough remaining income to assign this amount.");
+                input.value = previousAmount; // revert UI
+                input.setAttribute("data-prev", previousAmount);
+                return;
+            }
+
+            await fetch("/api/budget/plan", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    categoryId,
+                    amount: newAmount,
+                    month: currentMonth + 1,
+                    year: currentYear
+                })
+            });
+
+            // store new value
+            input.setAttribute("data-prev", newAmount);
+
+            loadCategories();
+        }
+
+    </script>
+    <script>
+        async function saveIncome() {
+            const amount = document.getElementById("monthlyIncome").value;
+            const token = localStorage.getItem("auth_token");
+
+            if (!amount) return;
+
+            await fetch("/api/budget/income", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    income: amount,
+                    month: currentMonth + 1,
+                    year: currentYear
+                })
+            });
+            loadCategories();
+        }
+    </script>
+    <script>
+  async function loadSummary() {
+    const token = localStorage.getItem("auth_token");
+
+    const res = await fetch(
+      `/api/budget/summary?month=${currentMonth + 1}&year=${currentYear}`,
+      { headers: { "Authorization": "Bearer " + token } }
+    );
+
+    const json = await res.json();
+
+    // ✅ unwrap ApiResponse
+    const data = json?.data ?? json;
+
+    document.getElementById("monthlyIncome").value = data.income ?? 0;
+    document.getElementById("assignedAmount").innerText = data.assigned ?? 0;
+    document.getElementById("remainingAmount").innerText = data.remaining ?? 0;
+
+    remainingAmount = Number(data.remaining ?? 0);
+  }
+
+    </script>
+    <div id="addCategoryModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Add Category</h3>
+
+            <input id="newCategoryName" type="text" placeholder="Category name" />
+
+            <select id="newCategoryType">
+                <option value="Subscription">Subscription</option>
+                <option value="Lifestyle">Lifestyle</option>
+                <option value="Goal">Goal</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <div class="modal-actions">
+                <button onclick="createCategory()">Create</button>
+                <button onclick="closeAddCategory()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function openAddCategory() {
+            document.getElementById("addCategoryModal").classList.remove("hidden");
+        }
+
+        function closeAddCategory() {
+            document.getElementById("addCategoryModal").classList.add("hidden");
+        }
+
+        async function createCategory() {
+            const name = document.getElementById("newCategoryName").value;
+            const type = document.getElementById("newCategoryType").value;
+            const token = localStorage.getItem("auth_token");
+
+            if (!name) {
+                alert("Category name required");
+                return;
+            }
+
+            const res = await fetch("/api/categories", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ name, type })
+            });
+
+            if (!res.ok) {
+                alert("Failed to create category");
+                return;
+            }
+
+            closeAddCategory();
+            loadCategories(); // 🔥 THIS refreshes dashboard
+        }
+
+    </script>
+    <script>
+        async function addRecurringBill() {
+            const token = localStorage.getItem("auth_token");
+
+            if (!selectedCategoryId) {
+                alert("Select a category first");
+                return;
+            }
+
+            const bill = {
+                name: document.getElementById("billName").value,
+                amount: Number(document.getElementById("billAmount").value),
+                frequency: document.getElementById("billFrequency").value,
+                nextDueDate: document.getElementById("billDate").value,
+                categoryId: selectedCategoryId // ✅ THIS WAS MISSING
+            };
+
+            if (!bill.name || !bill.amount || !bill.nextDueDate) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            const res = await fetch("/api/recurring-bills", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(bill)
+            });
+
+            if (res.ok) {
+                addDashboardAlert({
+                    message: "📌 New recurring bill added"
+                });
+            }
+
+            if (!res.ok) {
+                const err = await res.text();
+                alert("Failed to add bill: " + err);
+                return;
+            }
+
+            document.getElementById("billName").value = "";
+            document.getElementById("billAmount").value = "";
+            document.getElementById("billDate").value = "";
+
+            loadRecurringBills();
+        }
+
+    </script>
+    <script>
+        async function loadRecurringBills() {
+            const token = localStorage.getItem("auth_token");
+
+            const res = await fetch("/api/recurring-bills", {
+                headers: { "Authorization": "Bearer " + token }
+            });
+
+            const bills = await res.json();
+            const container = document.getElementById("recurringBillList");
+            container.innerHTML = "";
+
+            bills.forEach(bill => {
+                const row = document.createElement("div");
+                row.className = "category-row";
+
+                row.innerHTML = `
+                    <div class="category-name">
+                        ${bill.name}
+                        ${!bill.active ? "<span style='color:red;font-size:0.7rem'>(Disabled)</span>" : ""}
+                    </div>
+                    <div class="category-budget">৳ ${bill.amount}</div>
+                    <div class="category-available">${bill.frequency}</div>
+                `;
+                row.onclick = () => {
+                    selectedBillId = bill.id;
+                    document.getElementById("bill-control-title").innerText =
+                        `Bill: ${bill.name}`;
+                };
+
+                container.appendChild(row);
+            });
+        }
+    </script>
+    <script>
+        loadRecurringBills();
+    </script>
+    <script>
+        async function toggleBillStatus() {
+            if (!selectedBillId) {
+                alert("Select a recurring bill first");
+                return;
+            }
+
+            const token = localStorage.getItem("auth_token");
+
+            await fetch(`/api/recurring-bills/${selectedBillId}/toggle`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            loadRecurringBills();
+        }
+    </script>
+    <script>
+        async function deleteBill() {
+            if (!selectedBillId) {
+                alert("Select a recurring bill first");
+                return;
+            }
+
+            const confirmDelete = confirm("Delete this recurring bill?");
+            if (!confirmDelete) return;
+
+            const token = localStorage.getItem("auth_token");
+
+            await fetch(`/api/recurring-bills/${selectedBillId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            selectedBillId = null;
+            document.getElementById("bill-control-title").innerText = "Select a bill";
+
+            loadRecurringBills();
+        }
+    </script>
+    <script>
+        async function loadAlerts() {
+            const token = localStorage.getItem("auth_token");
+
+            const res = await fetch("/api/alerts", {
+                headers: { Authorization: "Bearer " + token }
+            });
+            if (res.ok) {
+                addDashboardAlert({ message: "📌 Alert Send" });
+            }
+            if (!res.ok) {
+                console.warn("⚠️ Failed to load alerts:", res.status);
+                return;
+            }
+
+            const alerts = await res.json();
+            alerts.forEach(a => addDashboardAlert({ message: a.message }));
+        }
+    </script>
+
+    <script>
+        let stompClient = null;
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const token = localStorage.getItem("auth_token");
+
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+
+            // 1️⃣ Validate token
+            const meRes = await fetch("/api/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
+
+            if (!meRes.ok) {
+                localStorage.removeItem("auth_token");
+                window.location.href = "/login";
+                return;
+            }
+
+            const user = await meRes.json();
+
+            connectWebSocket(user.userId);          // personal updates
+            if (user.familyId) {
+                connectFamilyWebSocket(user.familyId); // 👨‍👩‍👧‍👦 family updates
+            }
+
+            // 3️⃣ Load dashboard data
+            await loadAlerts();
+            await loadSummary();
+            await loadCategories();
+            await loadRecurringBills();
+        });
+    </script>
+    <script>
+        function connectWebSocket(userId) {
+            const socket = new SockJS("/ws");
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, () => {
+                console.log("🔌 WS connected");
+
+                stompClient.subscribe(`/topic/bills/${userId}`, async msg => {
+                    const data = JSON.parse(msg.body);
+                    console.log("🔔 WS message received", data);
+
+                    addDashboardAlert(data);
+                    await loadSummary();          // updates remaining
+                    await loadCategories();       // updates category balances
+                    await loadRecurringBills();
+
+                    flashLiveIndicator();
+                });
+            }, err => {
+                console.error("❌ WS error", err);
+            });
+        }
+        function flashLiveIndicator() {
+            document.body.classList.add("live-update");
+            setTimeout(() => {
+                document.body.classList.remove("live-update");
+            }, 600);
+        }
+    </script>
+    <!-- Family Subscription -->
+    <script>
+        function connectFamilyWebSocket(familyId) {
+
+            const socket = new SockJS("/ws");
+            const stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, () => {
+                console.log("👨‍👩‍👧‍👦 Family WS connected");
+
+                stompClient.subscribe(`/topic/family/${familyId}`, msg => {
+                    console.log("🔔 FAMILY UPDATE:", msg.body);
+
+                    // 🔥 Selective UI updates
+                    loadSummary();
+                    loadCategories();
+                    addDashboardAlert({ message: msg.body });
+                });
+            });
+        }
+    </script>
+    <script>
+        function addDashboardAlert(data) {
+            const alertsList = document.getElementById("alertsList");
+
+            // 🔥 REMOVE PLACEHOLDER ON FIRST ALERT
+            const placeholder = alertsList.querySelector(".alert.muted");
+            if (placeholder) placeholder.remove();
+
+            const alertDiv = document.createElement("div");
+            alertDiv.className = "alert";
+
+            alertDiv.innerText = data.message;
+
+            alertsList.prepend(alertDiv);
+        }
+
+    </script>
+    <script>
+        setTimeout(() => {
+            console.log("🔄 Auto reloading dashboard...");
+            location.reload();
+        }, 5000000); // 5 seconds
+    </script>
+</body>
+
+</html>

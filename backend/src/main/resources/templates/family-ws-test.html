@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Family WS Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+  <h2>Family WebSocket Test</h2>
+
+  <input id="familyId" placeholder="Family ID" />
+  <button onclick="connect()">Connect</button>
+
+  <pre id="log"></pre>
+
+  <script>
+    let client;
+
+    function log(msg) {
+      document.getElementById("log").textContent += msg + "\n";
+    }
+
+    function connect() {
+      const familyId = document.getElementById("familyId").value;
+
+      const socket = new SockJS("http://localhost:8080/ws");
+      client = Stomp.over(socket);
+
+      client.connect({}, () => {
+        log("✅ Connected");
+        client.subscribe("/topic/family/" + familyId, (msg) => {
+          log("🔔 Received: " + msg.body);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

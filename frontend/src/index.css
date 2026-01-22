@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+/* shimmer animation used in LandingPage */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-120%) rotate(12deg);
+  }
+  100% {
+    transform: translateX(220%) rotate(12deg);
+  }
+}
