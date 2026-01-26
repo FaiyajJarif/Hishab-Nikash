@@ -1,6 +1,15 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext(null);
+
+function parseUser(token) {
+  try {
+    return jwtDecode(token); // must contain userId, email, etc.
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() =>
@@ -8,6 +17,7 @@ export function AuthProvider({ children }) {
   );
   const [loading, setLoading] = useState(true);
 
+  const user = token ? parseUser(token) : null;
   const isAuthenticated = !!token;
 
   useEffect(() => {
@@ -16,9 +26,7 @@ export function AuthProvider({ children }) {
 
   function login(newToken, remember = true) {
     setToken(newToken);
-    if (remember) {
-      localStorage.setItem("token", newToken);
-    }
+    if (remember) localStorage.setItem("token", newToken);
   }
 
   function logout() {
@@ -30,6 +38,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         token,
+        user,               // ✅ NEW
         isAuthenticated,
         login,
         logout,

@@ -9,7 +9,6 @@ export default function SummaryCards({ totals, mode }) {
       hint: "Total this month",
       highlight: true,
     },
-
     {
       label: "Assigned",
       value: money(totals.assigned),
@@ -34,7 +33,7 @@ export default function SummaryCards({ totals, mode }) {
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       {cards.map((c, i) => (
         <motion.div
           key={c.label}
@@ -42,8 +41,7 @@ export default function SummaryCards({ totals, mode }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 * i, duration: 0.35 }}
           className={[
-            "rounded-3xl bg-white/10 backdrop-blur-xl p-5 ring-1 ring-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.25)]",
-            c.danger ? "ring-red-200/20" : "",
+            "rounded-2xl bg-white/10 backdrop-blur-xl p-3 ring-1 ring-white/10 shadow-[0_12px_30px_rgba(0,0,0,0.25)]",            c.danger ? "ring-red-200/20" : "",
             c.highlight ? "ring-lime-300/30" : "",
           ].join(" ")}
         >
@@ -53,7 +51,7 @@ export default function SummaryCards({ totals, mode }) {
 
           <div
             className={[
-              "mt-2 text-2xl font-extrabold",
+              "mt-1 text-lg font-extrabold",
               c.danger
                 ? "text-red-200"
                 : c.highlight
@@ -64,8 +62,7 @@ export default function SummaryCards({ totals, mode }) {
             {c.value}
           </div>
 
-          <div className="mt-2 text-xs text-white/55">{c.hint}</div>
-        </motion.div>
+          <div className="mt-1 text-[11px] text-white/55">{c.hint}</div>        </motion.div>
       ))}
     </div>
   );

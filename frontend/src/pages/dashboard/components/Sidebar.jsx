@@ -23,8 +23,18 @@ export default function Sidebar() {
 
         <div className="my-4 h-px bg-white/10" />
 
-        <NavItem to="/dashboard/profile">Profile</NavItem>
-        <NavItem to="/dashboard/family">Family</NavItem>
+        {/* ✅ PROFILE */}
+        <NavItem to="/dashboard/profile">👤 Profile</NavItem>
+
+        {/* ✅ FAMILY */}
+        <button
+          onClick={() => navigate("/dashboard/family")}
+          className="block w-full rounded-2xl px-4 py-3 text-sm text-left
+                     text-white/75 hover:bg-white/10 transition"
+        >
+          Family
+        </button>
+
         <NavItem to="/dashboard/banking">Banking</NavItem>
         <NavItem to="/dashboard/subscriptions">Subscriptions</NavItem>
       </div>
@@ -43,29 +53,29 @@ export default function Sidebar() {
 }
 
 function NavItem({ to, children, end = false }) {
-    return (
-      <NavLink
-        to={to}
-        end={end}
-        className={({ isActive }) =>
-          [
-            "block rounded-2xl px-4 py-3 text-sm transition",
-            isActive
-              ? "bg-lime-300 text-[#061a12] font-semibold"
-              : "text-white/75 hover:bg-white/10",
-          ].join(" ")
-        }
-      >
-        {children}
-      </NavLink>
-    );
-  }  
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        [
+          "block rounded-2xl px-4 py-3 text-sm transition",
+          isActive
+            ? "bg-lime-300 text-[#061a12] font-semibold"
+            : "text-white/75 hover:bg-white/10",
+        ].join(" ")
+      }
+    >
+      {children}
+    </NavLink>
+  );
+}
 
 function LogoMark() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 2l4 4-4 4-4-4 4-4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-      <path d="M6 12l6 10 6-10" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2l4 4-4 4-4-4 4-4Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M6 12l6 10 6-10" stroke="currentColor" strokeWidth="2" />
     </svg>
   );
 }

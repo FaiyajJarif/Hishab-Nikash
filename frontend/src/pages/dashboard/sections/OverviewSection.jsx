@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useDashboardData } from "../hooks/useDashboardData";
+import { useNavigate } from "react-router-dom";
+import { familyApi } from "../../../api/familyApi";
 
 import CategoryDrawer from "../components/CategoryDrawer";
 import AssignMoneyModal from "../components/AssignMoneyModal";
@@ -15,7 +17,17 @@ import InsightsPanel from "../components/InsightsPanel";
 export default function OverviewSection() {
   const [mode, setMode] = useState("month");
   const [date, setDate] = useState(new Date());
+  const [chartExpanded, setChartExpanded] = useState(false);
 
+  const navigate = useNavigate();
+  const [families, setFamilies] = useState([]);
+  const [familiesLoading, setFamiliesLoading] = useState(true);
+  useEffect(() => {
+    familyApi
+      .getMyFamilies()
+      .then(setFamilies)
+      .finally(() => setFamiliesLoading(false));
+  }, []);
   function shiftDate(direction) {
     setDate((d) => {
       if (mode === "month") {
@@ -90,6 +102,36 @@ export default function OverviewSection() {
           </button>
         </div>
       </motion.div>
+      {/* FAMILY PICKER */}
+        <div className="mt-6 rounded-3xl bg-white/10 p-5 ring-1 ring-white/15">
+          <div className="mb-3 text-sm font-semibold text-white/80">
+            👨‍👩‍👧 Your Families
+          </div>
+
+          {familiesLoading && (
+            <div className="text-sm text-white/60">Loading families…</div>
+          )}
+
+          {!familiesLoading && families.length === 0 && (
+            <div className="text-sm text-white/60">
+              You don’t belong to any family yet.
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {families.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => navigate(`/dashboard/family/${f.id}`)}
+                className="block w-full text-left rounded-2xl
+                          bg-white/5 px-4 py-3 text-sm
+                          hover:bg-white/10 transition"
+              >
+                {f.name}
+              </button>
+            ))}
+          </div>
+        </div>
 
       {/* SUMMARY */}
       <div className="mt-7">
@@ -98,16 +140,33 @@ export default function OverviewSection() {
 
       {/* MAIN GRID */}
       <div className="mt-7 grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-8 space-y-6">
-          <SpendingLineChart series={data.series} mode={mode} />
+        <div className="lg:col-span-5 space-y-6">
+        <motion.div
+          layout
+          className="overflow-hidden rounded-3xl bg-white/10 ring-1 ring-white/15"
+        >
+          <motion.div
+            layout
+            animate={{ height: chartExpanded ? 360 : 140 }}
+            transition={{ type: "spring", stiffness: 260, damping: 26 }}
+            className="cursor-pointer"
+            onClick={() => setChartExpanded((v) => !v)}
+          >
+            <SpendingLineChart series={data.series} mode={mode} />
+          </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <CategoryDonut categories={flatCategories} onInfo={openCategory} />
-            <InsightsPanel totals={data.totals} mode={mode} />
+          <div className="px-4 pb-3 text-xs text-white/50 text-center">
+            {chartExpanded ? "Click to collapse ▲" : "Click to expand ▼"}
           </div>
+        </motion.div>
+
+        <div className="space-y-6">
+          <CategoryDonut categories={flatCategories} onInfo={openCategory} />
+          <InsightsPanel totals={data.totals} mode={mode} />
+        </div>
         </div>
 
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-7 space-y-6">
           <CategoryTable categories={flatCategories} onInfo={openCategory} />
         </div>
       </div>

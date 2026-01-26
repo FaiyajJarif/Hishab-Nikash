@@ -1,5 +1,6 @@
 package com.Eqinox.store.api;
 
+import com.Eqinox.store.exceptions.BusinessException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,8 @@ public class GlobalExceptionHandler {
                 .orElse("Validation failed");
 
         ApiError err = ApiError.of("VALIDATION_ERROR", msg, 400, req.getRequestURI());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(err));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(err));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -29,7 +31,8 @@ public class GlobalExceptionHandler {
             HttpServletRequest req
     ) {
         ApiError err = ApiError.of("BAD_REQUEST", e.getMessage(), 400, req.getRequestURI());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(err));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(err));
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -38,17 +41,23 @@ public class GlobalExceptionHandler {
             HttpServletRequest req
     ) {
         ApiError err = ApiError.of("CONFLICT", e.getMessage(), 409, req.getRequestURI());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.fail(err));
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.fail(err));
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse<Void>> runtime(
-            RuntimeException e,
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Void>> business(
+            BusinessException e,
             HttpServletRequest req
     ) {
-        // keep as 400 for now; later you can split NOT_FOUND vs others
-        ApiError err = ApiError.of("RUNTIME_ERROR", e.getMessage(), 400, req.getRequestURI());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(err));
+        ApiError err = ApiError.of(
+                "BUSINESS_RULE_VIOLATION",
+                e.getMessage(),
+                409,
+                req.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.fail(err));
     }
 
     @ExceptionHandler(Exception.class)
@@ -56,7 +65,13 @@ public class GlobalExceptionHandler {
             Exception e,
             HttpServletRequest req
     ) {
-        ApiError err = ApiError.of("INTERNAL_ERROR", "Internal server error", 500, req.getRequestURI());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.fail(err));
+        ApiError err = ApiError.of(
+                "INTERNAL_ERROR",
+                "Internal server error",
+                500,
+                req.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.fail(err));
     }
 }

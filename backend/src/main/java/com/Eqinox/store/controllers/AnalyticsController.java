@@ -104,6 +104,17 @@ public class AnalyticsController {
         ));
     }
 
+    @PostMapping("/month/reopen")
+        public ResponseEntity<ApiResponse<Void>> reopenMonth(
+                @RequestHeader("Authorization") String auth,
+                @RequestParam int month,
+                @RequestParam int year
+        ) {
+        Integer userId = authUserService.requireUserId(auth);
+        analyticsService.reopenMonth(userId, month, year);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+        }
+
     @GetMapping("/rolling")
     public ResponseEntity<ApiResponse<List<RollingAverageDto>>> rollingAverage(
             @RequestHeader("Authorization") String auth,
@@ -161,4 +172,13 @@ public class AnalyticsController {
                 analyticsService.getCategoryInsight(userId, categoryId, LocalDate.parse(date))
         ));
     }
+    @GetMapping("/month/history")
+        public ResponseEntity<ApiResponse<List<MonthlyAnalyticsSnapshot>>> history(
+                @RequestHeader("Authorization") String auth
+        ) {
+        Integer userId = authUserService.requireUserId(auth);
+        return ResponseEntity.ok(
+                ApiResponse.ok(analyticsService.getMonthHistory(userId))
+        );
+        }
 }

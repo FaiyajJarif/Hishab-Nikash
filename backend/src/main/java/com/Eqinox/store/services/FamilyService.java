@@ -6,7 +6,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+import com.Eqinox.store.dtos.FamilyMemberDto;
 import com.Eqinox.store.entities.*;
+import com.Eqinox.store.exceptions.BusinessException;
 import com.Eqinox.store.repositories.*;
 
 @Service
@@ -79,11 +81,11 @@ public class FamilyService {
     }
 
     // 4️⃣ Get family members
-    public List<FamilyMember> getFamilyMembers(Integer familyId, Integer requesterId) {
-
-        authorizeMember(familyId, requesterId);
-        return memberRepo.findByFamilyId(familyId);
+    public List<FamilyMemberDto> getFamilyMembers(Integer familyId, Integer requesterId) {
+    authorizeMember(familyId, requesterId);
+    return memberRepo.findFamilyMembersWithUser(familyId);
     }
+
 
     // 5️⃣ Remove member (ADMIN)
     public void removeMember(Integer familyId, Integer targetUserId, Integer adminId) {
@@ -128,30 +130,37 @@ public class FamilyService {
         return member;
     }
 
-    public void changeRole(
-            Integer familyId,
-            Integer targetUserId,
-            FamilyRole newRole,
-            Integer adminId) {
+    public void changeMemberRole(
+        Integer familyId,
+        Integer actorUserId,
+        Integer targetUserId,
+        String newRole
+) {
+    FamilyMember actor = memberRepo
+            .findByFamilyIdAndUserId(familyId, actorUserId)
+            .orElseThrow(() -> new BusinessException("Not a member"));
 
-        authorizeAdmin(familyId, adminId);
-
-        FamilyMember target = memberRepo
-                .findByFamilyIdAndUserId(familyId, targetUserId)
-                .orElseThrow(() -> new RuntimeException("User not in family"));
-
-        // Prevent admin changing own role
-        if (targetUserId.equals(adminId)) {
-            throw new RuntimeException("Admin cannot change own role");
-        }
-
-        // Prevent demoting ADMIN
-        if (target.getRole() == FamilyRole.ADMIN) {
-            throw new RuntimeException("Cannot change ADMIN role");
-        }
-
-        target.setRole(newRole);
-        memberRepo.save(target);
+    if (actor.getRole() != FamilyRole.ADMIN) {
+        throw new BusinessException("Only ADMIN can change roles");
     }
+
+    FamilyMember target = memberRepo
+            .findByFamilyIdAndUserId(familyId, targetUserId)
+            .orElseThrow(() -> new BusinessException("Target not found"));
+
+    if (actorUserId.equals(targetUserId)) {
+        throw new BusinessException("Admin cannot change own role");
+    }
+
+    FamilyRole role;
+    try {
+        role = FamilyRole.valueOf(newRole.toUpperCase().trim());
+    } catch (Exception e) {
+        throw new BusinessException("Invalid role: " + newRole);
+    }
+
+    target.setRole(role);
+    memberRepo.save(target);
+}
 
 }

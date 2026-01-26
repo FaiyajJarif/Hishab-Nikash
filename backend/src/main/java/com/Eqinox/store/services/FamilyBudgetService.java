@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -131,4 +132,67 @@ public class FamilyBudgetService {
         if (month == null || month < 1 || month > 12) throw new IllegalArgumentException("Invalid month");
         if (year == null || year < 2000 || year > 2100) throw new IllegalArgumentException("Invalid year");
     }
+    public List<Map<String, Object>> getItemsWithCategory(Integer periodId) {
+        return itemRepo.findDetailedByPeriodId(periodId);
+    }    
+
+    public void renameCategory(
+        Integer familyId,
+        Integer categoryId,
+        String newName,
+        Integer actorUserId
+        ) {
+            if (newName == null || newName.isBlank()) {
+                throw new IllegalArgumentException("Category name required");
+            }
+
+            FamilyCategory c = categoryRepo.findById(categoryId)
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+
+            // 🔐 ensure category belongs to family
+            if (!c.getFamilyId().equals(familyId)) {
+                throw new RuntimeException("Category does not belong to this family");
+            }
+
+            c.setName(newName.trim());
+            categoryRepo.save(c);
+
+            familySyncService.broadcastFamilyEvent(
+                    familyId,
+                    actorUserId,
+                    "FAMILY_CATEGORY_RENAMED",
+                    "✏️ Category renamed to " + newName
+            );
+        }
+    public void spend(
+            Integer familyId,
+            Integer month,
+            Integer year,
+            Integer categoryId,
+            BigDecimal amount,
+            Integer actorUserId
+    ) {
+        validateNonNegative(amount, "Spend amount");
+    
+        FamilyBudgetPeriod p = getOrCreatePeriod(familyId, month, year);
+        syncItems(familyId, p);
+    
+        FamilyBudgetItem item = itemRepo
+                .findByPeriodIdAndCategoryId(p.getId(), categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+    
+        BigDecimal current = item.getActualAmount() == null
+                ? BigDecimal.ZERO
+                : item.getActualAmount();
+    
+        item.setActualAmount(current.add(amount));
+        itemRepo.save(item);
+    
+        familySyncService.broadcastFamilyEvent(
+                familyId,
+                actorUserId,
+                "FAMILY_EXPENSE_ADDED",
+                "💸 Expense added"
+        );
+    }    
 }

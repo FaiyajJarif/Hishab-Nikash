@@ -1,129 +1,301 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { useDailyAnalytics } from "../hooks/useDailyAnalytics";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { analyticsApi } from "../../../api/analyticsApi";
 
-import SummaryCards from "../components/SummaryCards";
-import CategoryDonut from "../components/CategoryDonut";
-import InsightsPanel from "../components/InsightsPanel";
-import SpendingLineChart from "../components/SpendingLineChart";
+import DailyCalendarHeatmap from "../components/DailyCalendarHeatmap";
+import DailySpendingChart from "../components/DailySpendingChart";
+import DailyCategoryTable from "../components/DailyCategoryTable";
+import CategoryActivityDrawer from "../components/CategoryActivityDrawer";
+import SpendingPaceBar from "../components/SpendingPaceBar";
+import { useDailySocket } from "../hooks/useDailySocket";
+import InsightCard from "../components/InsightCard";
+import DailySpendingTrend from "../components/DailySpendingTrend";
+
+
+/* ---------------- animations ---------------- */
+
+const fadeUp = {
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.35, ease: "easeOut" },
+};
+
+const slideVariants = {
+  initial: (direction) => ({
+    opacity: 0,
+    x: direction > 0 ? 40 : -40,
+  }),
+  animate: {
+    opacity: 1,
+    x: 0,
+  },
+  exit: (direction) => ({
+    opacity: 0,
+    x: direction > 0 ? -40 : 40,
+  }),
+};
 
 export default function DailyAnalytics() {
   const [date, setDate] = useState(new Date());
-  const { data, loading, error } = useDailyAnalytics(date);
+  const [direction, setDirection] = useState(0); // -1 = prev, 1 = next
 
-  if (loading) return <div className="text-white/70">Loading daily analytics…</div>;
-  if (error) return <div className="text-red-200">{error}</div>;
-  if (!data) return null;
+  const [summary, setSummary] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [anomalies, setAnomalies] = useState([]);
+  const [calendar, setCalendar] = useState([]);
+  const [insight, setInsight] = useState(null);
+  const [openCategory, setOpenCategory] = useState(null);
+  const [rolling, setRolling] = useState(null);
+  const iso = date.toISOString().slice(0, 10);
+  
 
-  const totals = {
-    assigned: data.summary.budget,
-    spent: data.summary.spent,
-    available: data.summary.budget - data.summary.spent,
-    overspent: data.overspend?.overspentAmount ?? 0,
-  };
+  async function loadDaily() {
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+  
+    try {
+      const results = await Promise.allSettled([
+        analyticsApi.dailySummary(iso),
+        analyticsApi.dailyCategories(iso),
+        analyticsApi.dailyAnomalies(iso),
+        analyticsApi.calendarHeatmap(month, year),
+        analyticsApi.dailyInsight(iso),
+        analyticsApi.rollingAverage(14, iso),
+      ]);
+  
+      const [
+        summaryRes,
+        categoriesRes,
+        anomaliesRes,
+        calendarRes,
+        insightRes,
+        rollingRes,
+      ] = results;
+  
+      /* -------- SUMMARY (critical) -------- */
+      const s = summaryRes.status === "fulfilled"
+        ? summaryRes.value
+        : {
+            date: iso,
+            expense: 0,
+            income: 0,
+            net: 0,
+            transactionCount: 0,
+            topCategory: null,
+            spent: 0,
+          };
+  
+      setSummary({
+        date: s.date,
+        expense: s.expense ?? 0,
+        income: s.income ?? 0,
+        net: s.net ?? 0,
+        transactionCount: s.transactionCount ?? 0,
+        topCategory: s.topCategory ?? null,
+        spent: s.spent ?? s.expense ?? 0,
+      });
+  
+      /* -------- OPTIONAL SECTIONS -------- */
+      setCategories(
+        categoriesRes.status === "fulfilled" && Array.isArray(categoriesRes.value)
+          ? categoriesRes.value
+          : []
+      );
+  
+      setAnomalies(
+        anomaliesRes.status === "fulfilled" && Array.isArray(anomaliesRes.value)
+          ? anomaliesRes.value
+          : []
+      );
+  
+      setCalendar(
+        calendarRes.status === "fulfilled" && Array.isArray(calendarRes.value)
+          ? calendarRes.value
+          : []
+      );
+  
+      setInsight(
+        insightRes.status === "fulfilled" ? insightRes.value : null
+      );
+  
+      setRolling(
+        rollingRes.status === "fulfilled" ? rollingRes.value : null
+      );
+  
+    } catch (err) {
+      console.error("Daily analytics failed hard:", err);
+  
+      // absolute fallback
+      setSummary({
+        date: iso,
+        expense: 0,
+        income: 0,
+        net: 0,
+        transactionCount: 0,
+        topCategory: null,
+        spent: 0,
+      });
+      setCategories([]);
+      setAnomalies([]);
+      setCalendar([]);
+      setInsight(null);
+      setRolling(null);
+    }
+  }  
+
+  useEffect(() => {
+    loadDaily();
+  }, [iso]);
+
+  useDailySocket({
+    dateISO: iso,
+    onRefresh: loadDaily,
+  });
+
+  if (!summary) {
+    return <div className="text-white/60">Loading daily analytics…</div>;
+  }
 
   return (
-    <div className="space-y-8">
-      {/* HEADER */}
+    <AnimatePresence mode="wait" custom={direction}>
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+        key={iso}                     // 🔑 remount on date change
+        custom={direction}
+        variants={slideVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="space-y-8"
       >
-        <div>
-          <h2 className="text-2xl font-extrabold">
-            Daily <span className="text-lime-200">Analytics</span>
-          </h2>
-          <p className="text-sm text-white/65">
-            How today performed vs expectations
-          </p>
-        </div>
+        {/* HEADER */}
+        <motion.div {...fadeUp} className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => {
+                setDirection(-1);
+                setDate((d) => new Date(new Date(d).setDate(d.getDate() - 1)));
+              }}
+              className="rounded-lg bg-white/10 px-3 py-2 hover:bg-white/20"
+            >
+              ←
+            </motion.button>
 
-        <DatePill
-          date={date}
-          onPrev={() => setDate(d => new Date(d.getTime() - 86400000))}
-          onNext={() => setDate(d => new Date(d.getTime() + 86400000))}
-        />
+            <div>
+              <div className="text-2xl font-extrabold">
+                Daily <span className="text-lime-300">Analytics</span>
+              </div>
+              <div className="text-sm text-white/60">
+                {date.toDateString()}
+              </div>
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => {
+                setDirection(1);
+                setDate((d) => new Date(new Date(d).setDate(d.getDate() + 1)));
+              }}
+              className="rounded-lg bg-white/10 px-3 py-2 hover:bg-white/20"
+            >
+              →
+            </motion.button>
+          </div>
+
+          <input
+            type="date"
+            value={iso}
+            onChange={(e) => {
+              const newDate = new Date(e.target.value);
+              setDirection(newDate > date ? 1 : -1);
+              setDate(newDate);
+            }}
+            className="rounded-xl bg-white/10 px-3 py-2 text-sm ring-1 ring-white/15"
+          />
+        </motion.div>
+
+        {/* SUMMARY */}
+        <motion.div layout {...fadeUp} className="grid grid-cols-3 gap-4">
+          <Stat label="Spent" value={summary.spent} />
+          <Stat label="Transactions" value={summary.transactionCount} />
+          <Stat label="Top Category" value={summary.topCategory || "—"} />
+        </motion.div>
+
+        {/* CALENDAR */}
+        <motion.div layout {...fadeUp}>
+          <DailyCalendarHeatmap days={calendar} onSelect={setDate} />
+        </motion.div>
+
+        {/* CHARTS */}
+          <motion.div layout {...fadeUp} className="space-y-4">
+            <DailySpendingChart summary={summary} insight={insight} />
+
+            {rolling && (
+              <DailySpendingTrend
+                calendar={calendar}
+                rollingSeries={rolling}
+              />
+            )}
+            <SpendingPaceBar summary={summary} insight={insight} />
+          </motion.div>
+
+        {/* CATEGORY BREAKDOWN */}
+        <motion.div
+          layout
+          {...fadeUp}
+          className="rounded-3xl bg-white/10 p-5 ring-1 ring-white/15"
+        >
+          <div className="mb-3 text-sm font-semibold">
+            Category Breakdown
+          </div>
+
+          {categories.length === 0 ? (
+            <div className="text-sm text-white/50">No spending</div>
+          ) : (
+            <DailyCategoryTable
+              categories={categories}
+              anomalies={anomalies}
+              onSelect={setOpenCategory}
+            />
+          )}
+        </motion.div>
+
+        {/* INSIGHT */}
+        {insight && (
+          <motion.div layout {...fadeUp}>
+            <InsightCard insight={insight} />
+          </motion.div>
+        )}
+
+        {/* DRAWER */}
+        <AnimatePresence>
+          {openCategory && (
+            <CategoryActivityDrawer
+              open
+              category={openCategory}
+              dateISO={iso}
+              onClose={() => setOpenCategory(null)}
+            />
+          )}
+        </AnimatePresence>
       </motion.div>
-
-      {/* SUMMARY */}
-      <SummaryCards totals={totals} mode="day" />
-
-      {/* CHARTS */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-8">
-          <SpendingLineChart
-            mode="day"
-            series={[
-              {
-                label: "Today",
-                income: data.summary.budget,
-                expense: data.summary.spent,
-              },
-            ]}
-          />
-        </div>
-
-        <div className="lg:col-span-4 space-y-6">
-          <CategoryDonut categories={data.categories} />
-          <InsightsPanel
-            totals={totals}
-            mode="day"
-          />
-        </div>
-      </div>
-
-      {/* ALERTS */}
-      {(data.overspend?.overspent || data.anomaly?.isAnomalous) && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="rounded-3xl bg-red-500/10 p-6 ring-1 ring-red-300/20"
-        >
-          <h3 className="font-extrabold text-red-200">⚠ Attention Needed</h3>
-
-          {data.overspend?.overspent && (
-            <p className="mt-2 text-sm text-white/80">
-              You overspent by{" "}
-              <span className="text-red-200 font-semibold">
-                ৳{data.overspend.overspentAmount}
-              </span>
-            </p>
-          )}
-
-          {data.anomaly?.isAnomalous && (
-            <p className="mt-2 text-sm text-white/80">
-              Unusual spending detected compared to your normal pattern.
-            </p>
-          )}
-        </motion.div>
-      )}
-
-      {/* INSIGHT */}
-      {data.insight?.message && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="rounded-3xl bg-white/10 p-6 ring-1 ring-white/15"
-        >
-          <h3 className="font-semibold text-white/90">💡 Insight</h3>
-          <p className="mt-2 text-sm text-white/70">
-            {data.insight.message}
-          </p>
-        </motion.div>
-      )}
-    </div>
+    </AnimatePresence>
   );
 }
 
-function DatePill({ date, onPrev, onNext }) {
+function Stat({ label, value }) {
   return (
-    <div className="flex items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 ring-1 ring-white/15">
-      <button onClick={onPrev} className="h-8 w-8 rounded-xl hover:bg-white/10">‹</button>
-      <div className="min-w-[160px] text-center text-sm">
-        {date.toDateString()}
+    <motion.div
+      layout
+      className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/15"
+    >
+      <div className="text-xs text-white/60">{label}</div>
+      <div className="mt-1 text-lg font-bold text-lime-300">
+        {typeof value === "number" ? `৳${value}` : value}
       </div>
-      <button onClick={onNext} className="h-8 w-8 rounded-xl hover:bg-white/10">›</button>
-    </div>
+    </motion.div>
   );
 }

@@ -36,6 +36,8 @@ public class MonthlyAnalyticsSnapshot {
     @Column(nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
+    private OffsetDateTime closedAt;
+
     public Integer getId() { return id; }
     public Integer getUserId() { return userId; }
     public void setUserId(Integer userId) { this.userId = userId; }
@@ -60,4 +62,12 @@ public class MonthlyAnalyticsSnapshot {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public OffsetDateTime getClosedAt() {
+        return closedAt;
+    }
+    
+    public void setClosedAt(OffsetDateTime closedAt) {
+        this.closedAt = closedAt;
+    }    
 }

@@ -2,6 +2,7 @@ package com.Eqinox.store.controllers;
 
 import com.Eqinox.store.api.ApiResponse;
 import com.Eqinox.store.dtos.CreateFamilyRequest;
+import com.Eqinox.store.dtos.FamilyMemberDto;
 import com.Eqinox.store.dtos.InviteFamilyRequest;
 import com.Eqinox.store.dtos.InviteFamilyResponse;
 import com.Eqinox.store.entities.FamilyGroup;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/family")
@@ -66,15 +68,19 @@ public class FamilyController {
     }
 
     @GetMapping("/{familyId}/members")
-    public ResponseEntity<ApiResponse<List<FamilyMember>>> members(
-            @RequestHeader("Authorization") String auth,
-            @PathVariable Integer familyId
-    ) {
+        public ResponseEntity<ApiResponse<List<FamilyMemberDto>>> members(
+                @RequestHeader("Authorization") String auth,
+                @PathVariable Integer familyId
+        ) {
         Integer userId = authUserService.requireUserId(auth);
-        return ResponseEntity.ok(ApiResponse.ok(
+
+        return ResponseEntity.ok(
+                ApiResponse.ok(
                 familyService.getFamilyMembers(familyId, userId)
-        ));
-    }
+                )
+        );
+        }
+
 
     @DeleteMapping("/{familyId}/remove/{userId}")
     public ResponseEntity<ApiResponse<Void>> remove(
@@ -97,15 +103,23 @@ public class FamilyController {
         return ResponseEntity.ok(ApiResponse.ok());
     }
 
-    @PutMapping("/{familyId}/role")
-    public ResponseEntity<ApiResponse<Void>> changeRole(
-            @RequestHeader("Authorization") String auth,
-            @PathVariable Integer familyId,
-            @RequestParam Integer userId,
-            @RequestParam FamilyRole role
-    ) {
-        Integer adminId = authUserService.requireUserId(auth);
-        familyService.changeRole(familyId, userId, role, adminId);
-        return ResponseEntity.ok(ApiResponse.ok());
-    }
+    @PutMapping("/{familyId}/members/{userId}/role")
+public ResponseEntity<ApiResponse<Void>> changeMemberRole(
+        @RequestHeader("Authorization") String auth,
+        @PathVariable Integer familyId,
+        @PathVariable Integer userId,
+        @RequestBody Map<String, String> body
+) {
+    Integer actorUserId = authUserService.requireUserId(auth);
+
+    familyService.changeMemberRole(
+            familyId,
+            actorUserId,   // ✅ CORRECT USER (3)
+            userId,
+            body.get("role")
+    );
+
+    return ResponseEntity.ok(ApiResponse.ok());
+}
+
 }

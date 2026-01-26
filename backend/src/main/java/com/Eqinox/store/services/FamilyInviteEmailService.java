@@ -8,7 +8,7 @@ public class FamilyInviteEmailService {
 
     private final EmailService emailService;
 
-    @Value("${app.frontend.base-url:http://localhost:3000}")
+    @Value("${app.frontend.base-url:http://localhost:5173}")
     private String frontendBaseUrl;
 
     public FamilyInviteEmailService(EmailService emailService) {

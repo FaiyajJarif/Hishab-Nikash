@@ -1,29 +1,36 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import DashboardLayout from "./DashboardLayout";
 
 import OverviewSection from "./sections/OverviewSection";
 import DailyAnalytics from "./sections/DailyAnalytics";
 import MonthlyAnalytics from "./sections/MonthlyAnalytics";
-import ProfileDashboard from "./sections/ProfileDashboard";
-import FamilyDashboard from "./sections/FamilyDashboard";
+import FamilyDashboard from "./family/FamilyDashboard";
+import FamilyHome from "./family/FamilyHome";
 import BankingDashboard from "./sections/BankingDashboard";
 import RecurringBillsDashboard from "./sections/RecurringBillsDashboard";
+import ProfilePage from "./profile/ProfilePage";
+import ProtectedRoute from "../../components/ProtectedRoute";
 
 export default function DashboardPage() {
   return (
-    <DashboardLayout>
-      <Routes>
-        <Route index element={<OverviewSection />} />
-        <Route path="daily" element={<DailyAnalytics />} />
-        <Route path="monthly" element={<MonthlyAnalytics />} />
+    <ProtectedRoute>
+      <DashboardLayout>
+        <Routes>
+          <Route index element={<OverviewSection />} />
+          <Route path="daily" element={<DailyAnalytics />} />
+          <Route path="monthly" element={<MonthlyAnalytics />} />
 
-        <Route path="profile" element={<ProfileDashboard />} />
-        <Route path="family" element={<FamilyDashboard />} />
-        <Route path="banking" element={<BankingDashboard />} />
-        <Route path="subscriptions" element={<RecurringBillsDashboard />} />
+          {/* ✅ PROFILE */}
+          <Route path="profile" element={<ProfilePage />} />
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </DashboardLayout>
+          {/* ✅ FAMILY */}
+          <Route path="family" element={<FamilyHome />} />
+          <Route path="family/:familyId" element={<FamilyDashboard />} />
+
+          <Route path="banking" element={<BankingDashboard />} />
+          <Route path="subscriptions" element={<RecurringBillsDashboard />} />
+        </Routes>
+      </DashboardLayout>
+    </ProtectedRoute>
   );
 }

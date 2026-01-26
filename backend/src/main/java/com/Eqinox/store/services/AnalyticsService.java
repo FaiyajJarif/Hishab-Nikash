@@ -2,6 +2,7 @@ package com.Eqinox.store.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +34,7 @@ import com.Eqinox.store.repositories.TransactionRepository;
 import com.Eqinox.store.repositories.BudgetItemRepository;
 import com.Eqinox.store.entities.Transaction;
 import com.Eqinox.store.entities.TransactionType;
+import com.Eqinox.store.exceptions.BusinessException;
 
 import jakarta.transaction.Transactional;
 
@@ -191,23 +193,47 @@ public class AnalyticsService {
     // MONTH CLOSE (SNAPSHOT)
     // --------------------
     public MonthlyAnalyticsSnapshot closeMonth(Integer userId, int month, int year) {
-        MonthSummaryDto summary = getMonthSummary(userId, month, year);
 
         MonthlyAnalyticsSnapshot snap = snapshotRepo
                 .findByUserIdAndMonthAndYear(userId, month, year)
-                .orElseGet(MonthlyAnalyticsSnapshot::new);
+                .orElse(null);
 
-        snap.setUserId(userId);
-        snap.setMonth(month);
-        snap.setYear(year);
+        if (snap != null && snap.getClosedAt() != null) {
+            throw new BusinessException("Month already closed");
+        }
+
+        MonthSummaryDto summary = getMonthSummary(userId, month, year);
+
+        if (snap == null) {
+            snap = new MonthlyAnalyticsSnapshot();
+            snap.setUserId(userId);
+            snap.setMonth(month);
+            snap.setYear(year);
+            snap.setCreatedAt(OffsetDateTime.now());
+        }
+
         snap.setIncome(summary.getIncome());
         snap.setExpense(summary.getExpense());
         snap.setAssigned(summary.getAssigned());
         snap.setUnassigned(summary.getUnassigned());
+        snap.setClosedAt(OffsetDateTime.now()); // ⭐ THIS is the close
 
         return snapshotRepo.save(snap);
     }
 
+    public void reopenMonth(Integer userId, int month, int year) {
+
+        MonthlyAnalyticsSnapshot snap = snapshotRepo
+                .findByUserIdAndMonthAndYear(userId, month, year)
+                .orElseThrow(() -> new BusinessException("Month not found"));
+    
+        if (snap.getClosedAt() == null) {
+            throw new BusinessException("Month is not closed");
+        }
+    
+        snap.setClosedAt(null);
+        snapshotRepo.save(snap);
+    }    
     // --------------------
     // Helpers
     // --------------------
@@ -430,5 +456,38 @@ public class AnalyticsService {
 
         return new DayDetailDto(date, income, expense, net, count, categories, transactions);
     }
+    public List<MonthlyAnalyticsSnapshot> getMonthHistory(Integer userId) {
+        return snapshotRepo.findByUserIdOrderByYearDescMonthDesc(userId);
+    }    
+    public double totalSpending(Integer userId, int month, int year) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDate start = ym.atDay(1);
+        LocalDate end = ym.atEndOfMonth();
+    
+        BigDecimal expense = txRepo.sumByRangeAndType(
+                userId, start, end, TransactionType.EXPENSE);
+    
+        return expense == null ? 0 : expense.doubleValue();
+    }
+    public double avgSpendingForAgeRange(String ageRange, int month, int year) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDate start = ym.atDay(1);
+        LocalDate end = ym.atEndOfMonth();
+    
+        int minAge;
+        int maxAge;
+    
+        switch (ageRange) {
+            case "18–25" -> { minAge = 18; maxAge = 25; }
+            case "26–35" -> { minAge = 26; maxAge = 35; }
+            case "36–45" -> { minAge = 36; maxAge = 45; }
+            default -> { minAge = 46; maxAge = 200; }
+        }
+    
+        BigDecimal avg =
+                txRepo.avgSpendingForAgeRange(minAge, maxAge, start, end);
+    
+        return avg == null ? 0 : avg.doubleValue();
+    }      
 
 }

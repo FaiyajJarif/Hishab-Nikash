@@ -90,4 +90,22 @@ public interface AnalyticsTransactionRepository extends JpaRepository<Transactio
             @Param("start") LocalDate start,
             @Param("end") LocalDate end
     );
+
+    @Query(
+        value = """
+            SELECT AVG(t.amount)
+            FROM transactions t
+            JOIN users u ON u.id = t.user_id
+            WHERE t.type = 'EXPENSE'
+              AND EXTRACT(YEAR FROM AGE(u.date_of_birth)) BETWEEN :minAge AND :maxAge
+              AND t.date BETWEEN :start AND :end
+        """,
+        nativeQuery = true
+    )
+    BigDecimal avgSpendingForAgeRange(
+            @Param("minAge") int minAge,
+            @Param("maxAge") int maxAge,
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end
+    );    
 }

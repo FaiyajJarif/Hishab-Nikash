@@ -13,10 +13,11 @@ import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import OverviewSection from "./pages/dashboard/sections/OverviewSection";
 import DailyAnalytics from "./pages/dashboard/sections/DailyAnalytics";
 import MonthlyAnalytics from "./pages/dashboard/sections/MonthlyAnalytics";
-import ProfileDashboard from "./pages/dashboard/sections/ProfileDashboard";
-import FamilyDashboard from "./pages/dashboard/sections/FamilyDashboard";
+import FamilyDashboard from "./pages/dashboard/family/FamilyDashboard";
 import BankingDashboard from "./pages/dashboard/sections/BankingDashboard";
 import RecurringBillsDashboard from "./pages/dashboard/sections/RecurringBillsDashboard";
+import FamilyHome from "./pages/dashboard/family/FamilyHome";
+import ProfilePage from "./pages/dashboard/profile/ProfilePage";
 
 export default function App() {
   return (
@@ -50,11 +51,12 @@ export default function App() {
             {/* ANALYTICS */}
             <Route path="daily" element={<DailyAnalytics />} />
             <Route path="monthly" element={<MonthlyAnalytics />} />
+            <Route path="profile" element={<ProfilePage />} />
 
             {/* OTHER PAGES */}
-            <Route path="profile" element={<ProfileDashboard />} />
-            <Route path="family" element={<FamilyDashboard />} />
-            <Route path="banking" element={<BankingDashboard />} />
+            <Route path="family" element={<FamilyHome />} />
+            <Route path="family/:familyId" element={<FamilyDashboard />} />    
+             <Route path="banking" element={<BankingDashboard />} />
             <Route path="subscriptions" element={<RecurringBillsDashboard />} />
           </Route>
         </Routes>
