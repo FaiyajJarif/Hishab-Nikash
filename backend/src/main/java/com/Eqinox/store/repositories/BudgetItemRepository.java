@@ -122,4 +122,16 @@ public interface BudgetItemRepository extends JpaRepository<BudgetItem, Integer>
         """)
         BigDecimal sumAssignedForCategory(@Param("categoryId") Integer categoryId);
 
+        @Query("""
+        SELECT COALESCE(SUM(b.plannedAmount), 0)
+        FROM BudgetItem b
+        WHERE b.categoryId = :categoryId
+            AND (b.budgetPeriod.year < :year
+            OR (b.budgetPeriod.year = :year AND b.budgetPeriod.month <= :month))
+        """)
+        BigDecimal sumAssignedByCategoryUpTo(
+            Integer categoryId,
+            Integer month,
+            Integer year
+        );
 }

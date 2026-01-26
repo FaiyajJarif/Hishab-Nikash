@@ -71,26 +71,51 @@ export default function CategoryDrawer({ open, category, month, year, onClose })
   </div>
 
   <button
-  onClick={() => setTargetOpen(true)}
-  className="mt-2 w-full rounded-2xl bg-white/10 px-4 py-3"
->
-  🎯 Set target
-</button>
+    onClick={() => setTargetOpen(true)}
+    className="mt-2 w-full rounded-2xl bg-white/10 px-4 py-3"
+  >
+    🎯 Set target
+  </button>
 
   {c?.goal?.enabled ? (
     <>
-      <div className="mt-3 space-y-1">
-      <div className="text-sm text-white/80">
+      {/* TARGET TEXT */}
+      <div className="mt-3 text-sm text-white/80">
         Target:{" "}
         <span className="text-lime-200 font-semibold">
           {c.goal.type === "MONTHLY"
             ? `${money(c.goal.monthlyAmount)} / month`
-            : `${money(c.goal.monthlyAmount)} / month until ${money(c.goal.totalAmount)}`}
+            : `${money(c.goal.monthlyAmount)} / month until ${money(
+                c.goal.totalAmount
+              )}`}
         </span>
       </div>
-      </div>
 
-      {/* 🔥 TARGET STATUS (THIS IS STEP 4) */}
+      {/* TOTAL TARGET PROGRESS */}
+      {c.goal.type === "TOTAL" &&
+        typeof c.goal.assignedAllTime === "number" &&
+        typeof c.goal.totalAmount === "number" && (
+          <>
+            <div className="mt-2 text-xs text-white/70">
+              Progress: {money(c.goal.assignedAllTime)} /{" "}
+              {money(c.goal.totalAmount)}
+            </div>
+
+            <div className="mt-2 h-2 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full bg-lime-300 transition-all"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    (c.goal.assignedAllTime / c.goal.totalAmount) * 100
+                  )}%`,
+                }}
+              />
+            </div>
+          </>
+        )}
+
+      {/* STATUS */}
       {targetStatus && (
         <div
           className={[
@@ -190,3 +215,4 @@ function getTargetStatus(category) {
 
   return null;
 }
+

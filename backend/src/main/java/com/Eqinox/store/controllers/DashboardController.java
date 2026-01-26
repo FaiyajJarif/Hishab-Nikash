@@ -102,6 +102,13 @@ public class DashboardController {
             BigDecimal totalAssignedForCategory =
             budgetItemRepo.sumAssignedForCategory(c.getCategoryId());
 
+            BigDecimal assignedAllTime =
+            budgetItemRepo.sumAssignedByCategoryUpTo(
+                c.getCategoryId(),
+                month,
+                year
+            );
+
             Map<String, Object> row = new HashMap<>();
             row.put("id", c.getCategoryId());
             row.put("name", c.getName());
@@ -116,6 +123,8 @@ public class DashboardController {
             row.put("frequency", goal == null ? null : goal.getFrequency());
             row.put("totalTargetAmount",
     goal == null ? null : goal.getTotalTargetAmount());
+            row.put("totalAssignedAllTime", assignedAllTime);
+
 
             row.put("totalAssignedAllTime", totalAssignedForCategory);
 

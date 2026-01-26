@@ -31,7 +31,15 @@ export default function CategoryTable({ categories, onInfo }) {
           {categories.map((c) => (
             <div key={c.id} className="grid grid-cols-12 items-center px-3 py-3 text-sm">
               <div className="col-span-5">
-                <div className="font-semibold text-white/90">{c.name}</div>
+              <div className="font-semibold text-white/90 flex items-center gap-2">
+                {c.name}
+
+                {isUnderfunded(c) && (
+                  <span className="rounded-full bg-red-400/15 px-2 py-0.5 text-[10px] font-bold text-red-300">
+                    Underfunded
+                  </span>
+                )}
+              </div>
                 {c.goal?.enabled ? (
                   <div className="mt-0.5 text-xs text-lime-200/80">Goal: {c.goal.type === "MONTHLY"
                     ? `${money(c.goal.monthlyAmount)} / month`
@@ -78,4 +86,25 @@ function money(n) {
   const sign = n < 0 ? "-" : "";
   const v = Math.abs(n);
   return `${sign}৳${v.toLocaleString()}`;
+}
+function getUnderfunded(category) {
+  if (!category.goal?.enabled) return null;
+  if (category.goal.type !== "MONTHLY") return null;
+
+  const diff = category.goal.monthlyAmount - category.assigned;
+  return diff > 0 ? diff : null;
+}
+
+function isUnderfunded(c) {
+  if (!c.goal?.enabled) return false;
+
+  if (c.goal.type === "MONTHLY") {
+    return c.assigned < c.goal.monthlyAmount;
+  }
+
+  if (c.goal.type === "TOTAL") {
+    return c.goal.assignedAllTime < c.goal.totalAmount;
+  }
+
+  return false;
 }
