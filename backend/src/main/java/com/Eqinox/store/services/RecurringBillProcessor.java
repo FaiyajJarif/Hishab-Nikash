@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class RecurringBillProcessor {
 
@@ -81,7 +83,12 @@ public class RecurringBillProcessor {
         }
 
         // 1) Create expense transaction
-        transactionService.createExpenseFromRecurringBill(bill);
+        try {
+            transactionService.createExpenseFromRecurringBill(bill);
+        } catch (Exception e) {
+            log.error("Failed to process recurring bill {}", bill.getId(), e);
+            // DO NOT rethrow
+        }
 
         // 2) Add alert row
         alertRepository.save(new Alert(

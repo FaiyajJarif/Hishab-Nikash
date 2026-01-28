@@ -21,11 +21,15 @@ export default function DonutChartBase({ data }) {
             color: "white",
           }}
         />
-        <Pie data={data} dataKey="value" nameKey="name" innerRadius={58} outerRadius={85} paddingAngle={3}>
-          {data.map((_, i) => (
-            <Cell key={i} fill={colors[i % colors.length]} />
+        <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90}>
+          {data.map((entry, index) => (
+            <Cell
+              key={`cell-${entry.name}-${index}`}
+              fill={colors[index % colors.length]}
+            />
           ))}
         </Pie>
+
       </PieChart>
     </ResponsiveContainer>
   );

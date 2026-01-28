@@ -3,8 +3,6 @@ package com.Eqinox.store.entities;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "alerts")
@@ -19,11 +17,21 @@ public class Alert {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(length = 20)
+    private String severity;
+
     public Alert() {} // ✅ required by JPA
 
     public Alert(Integer userId, String message) { // ✅ easy creation
         this.userId = userId;
         this.message = message;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public Alert(Integer userId, String message, String severity) {
+        this.userId = userId;
+        this.message = message;
+        this.severity = severity;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -37,4 +45,11 @@ public class Alert {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; } // optional
+
+    public String getSeverity() {
+        return severity;
+    }
+    public void setSeverity(String severity) {
+        this.severity = severity;
+    }
 }

@@ -61,7 +61,9 @@ export default function CategoryTable({ categories, onInfo }) {
                   className="grid h-8 w-8 place-items-center rounded-xl bg-white/10 ring-1 ring-white/10 hover:bg-white/15 transition"
                   title="Category details"
                 >
-                  ℹ️
+                  <div className="h-5 w-5 rounded-full bg-lime-300 text-[#061a12] text-xs grid place-items-center cursor-pointer">
+                    i
+                  </div>
                 </button>
               </div>
             </div>

@@ -2,8 +2,10 @@ package com.Eqinox.store.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,9 +13,12 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.Eqinox.store.dtos.CashflowPointDto;
+import com.Eqinox.store.dtos.alerts.AlertEventDto;
 import com.Eqinox.store.dtos.analytics.CalendarDayDto;
 import com.Eqinox.store.dtos.analytics.CategoryBreakdownDto;
 import com.Eqinox.store.dtos.analytics.CategoryOverspendDto;
+import com.Eqinox.store.dtos.analytics.DailyCashflowDto;
 import com.Eqinox.store.dtos.analytics.DailyOverspendAlertDto;
 import com.Eqinox.store.dtos.analytics.DailySummaryDto;
 import com.Eqinox.store.dtos.analytics.DayDetailDto;
@@ -22,11 +27,13 @@ import com.Eqinox.store.dtos.analytics.MonthSummaryDto;
 import com.Eqinox.store.dtos.analytics.MonthTrendDto;
 import com.Eqinox.store.dtos.analytics.RollingAverageDto;
 import com.Eqinox.store.dtos.analytics.TransactionListItemDto;
+import com.Eqinox.store.entities.Alert;
 import com.Eqinox.store.entities.BudgetItem;
 import com.Eqinox.store.entities.BudgetPeriod;
 import com.Eqinox.store.entities.Category;
 import com.Eqinox.store.entities.MonthlyAnalyticsSnapshot;
 import com.Eqinox.store.entities.TransactionType;
+import com.Eqinox.store.repositories.AlertRepository;
 import com.Eqinox.store.repositories.AnalyticsTransactionRepository;
 import com.Eqinox.store.repositories.CategoryRepository;
 import com.Eqinox.store.repositories.MonthlyAnalyticsSnapshotRepository;
@@ -48,6 +55,8 @@ public class AnalyticsService {
     private final BudgetService budgetService;
     private final TransactionRepository transactionRepo;
     private final BudgetItemRepository budgetItemRepo;
+    private final AlertRepository alertRepository;
+    private final UserWsNotificationService userNotificationService;
 
     public AnalyticsService(
             AnalyticsTransactionRepository txRepo,
@@ -55,13 +64,17 @@ public class AnalyticsService {
             MonthlyAnalyticsSnapshotRepository snapshotRepo,
             BudgetService budgetService,
             TransactionRepository transactionRepo,
-            BudgetItemRepository budgetItemRepo) {
+            BudgetItemRepository budgetItemRepo,
+            AlertRepository alertRepository,
+            UserWsNotificationService userWsNotificationService) {
         this.txRepo = txRepo;
         this.categoryRepo = categoryRepo;
         this.snapshotRepo = snapshotRepo;
         this.budgetService = budgetService;
         this.transactionRepo = transactionRepo;
         this.budgetItemRepo = budgetItemRepo;
+        this.alertRepository = alertRepository;
+        this.userNotificationService = userWsNotificationService;
     }
 
     // --------------------
@@ -132,6 +145,36 @@ public class AnalyticsService {
         BigDecimal assigned = budgetService.getAssignedTotal(period);
 
         BigDecimal remaining = period.getIncome().subtract(assigned);
+        if (remaining.compareTo(BigDecimal.ZERO) < 0) {
+
+            String msg = "🚨 You overspent this month by ৳" + remaining.abs();
+
+            boolean exists = alertRepository
+                .existsByUserIdAndMessageAndCreatedAtAfter(
+                    userId,
+                    msg,
+                    LocalDateTime.now().minusHours(24)
+                );
+
+            if (!exists) {
+                Alert alert = new Alert(
+                    userId,
+                    msg,
+                    "CRITICAL"
+                );
+                
+                alertRepository.save(alert);
+                System.out.println("🔥 FORCING WS SEND");
+                userNotificationService.broadcastToUser(
+                    userId,
+                    new AlertEventDto(
+                        alert.getMessage(),
+                        alert.getSeverity(),
+                        alert.getCreatedAt().atOffset(ZoneOffset.UTC)
+                    )
+                );                
+            }
+        }       
         BigDecimal unassigned = remaining;
 
         return new MonthSummaryDto(month, year, period.getIncome(), expense, net, assigned, remaining, unassigned);
@@ -359,6 +402,21 @@ public class AnalyticsService {
                         actual,
                         diff,
                         true));
+                        String msg =
+                            "⚠️ You overspent in \"" +
+                            categoryNames.getOrDefault(item.getCategoryId(), "Unknown") +
+                            "\" by ৳" + diff;
+
+                        boolean exists = alertRepository
+                            .existsByUserIdAndMessageAndCreatedAtAfter(
+                                userId,
+                                msg,
+                                LocalDateTime.now().minusHours(24)
+                            );
+
+                        if (!exists) {
+                            alertRepository.save(new Alert(userId, msg, "WARNING"));
+                        }
             }
         }
 
@@ -490,4 +548,67 @@ public class AnalyticsService {
         return avg == null ? 0 : avg.doubleValue();
     }      
 
+    public List<CashflowPointDto> getCashflow(
+        Integer userId,
+        int monthsBack
+) {
+    List<CashflowPointDto> out = new ArrayList<>();
+    YearMonth now = YearMonth.now();
+
+    for (int i = monthsBack - 1; i >= 0; i--) {
+        YearMonth ym = now.minusMonths(i);
+
+        LocalDate start = ym.atDay(1);
+        LocalDate end = ym.atEndOfMonth();
+
+        BigDecimal income = txRepo.sumByRangeAndType(
+            userId, start, end, TransactionType.INCOME
+        );
+
+        BigDecimal expense = txRepo.sumByRangeAndType(
+            userId, start, end, TransactionType.EXPENSE
+        );
+
+        out.add(new CashflowPointDto(
+            ym.getMonth().name().substring(0, 3),
+            income == null ? BigDecimal.ZERO : income,
+            expense == null ? BigDecimal.ZERO : expense
+        ));
+    }
+    return out;
+}
+public List<DailyCashflowDto> getDailyCashflow(Integer userId, int days) {
+    LocalDate end = LocalDate.now();
+    LocalDate start = end.minusDays(days - 1);
+
+    Map<LocalDate, Double> expenses = toMap(
+        transactionRepo.sumExpensesPerDay(userId, start, end)
+    );
+
+    Map<LocalDate, Double> incomes = toMap(
+        transactionRepo.sumIncomePerDay(userId, start, end)
+    );
+
+    List<DailyCashflowDto> result = new ArrayList<>();
+
+    for (int i = 0; i < days; i++) {
+        LocalDate date = start.plusDays(i);
+
+        result.add(new DailyCashflowDto(
+            date,
+            expenses.getOrDefault(date, 0.0),
+            incomes.getOrDefault(date, 0.0)
+        ));
+    }
+
+    return result;
+}
+
+private Map<LocalDate, Double> toMap(List<Object[]> rows) {
+    Map<LocalDate, Double> map = new HashMap<>();
+    for (Object[] r : rows) {
+        map.put((LocalDate) r[0], ((Number) r[1]).doubleValue());
+    }
+    return map;
+}
 }

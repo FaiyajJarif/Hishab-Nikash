@@ -1,8 +1,12 @@
 package com.Eqinox.store.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import io.micrometer.common.lang.NonNull;
 
 @Entity
 @Table(name = "recurring_bills")
@@ -17,7 +21,9 @@ public class RecurringBill {
     private Integer userId;
 
     // which budget category it belongs to
-    @Column(nullable = false)
+    @NonNull
+    @Min(1)
+    @Column(name = "category_id", nullable = false)
     private Integer categoryId;
 
     @Column(nullable = false)

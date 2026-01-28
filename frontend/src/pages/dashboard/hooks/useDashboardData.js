@@ -121,5 +121,5 @@ export function useDashboardData({ mode, date }) {
       window.removeEventListener("dashboard-refresh", refresh);
   }, [load]);
 
-  return { data, groups, loading, error };
+  return { data, groups, loading, error, reload: load };
 }

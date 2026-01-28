@@ -1,43 +1,60 @@
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-  } from "recharts";
+import { useEffect, useState } from "react";
+import { Line } from "react-chartjs-2";
+import { dashboardApi } from "../api/dashboardApi";
+import "../api/chartSetup"; // 🔑 REQUIRED
+
+export default function SpendingLineChart({ days = 14 }) {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
   
-  const data = [
-    { day: "1", spent: 200, budget: 250 },
-    { day: "5", spent: 400, budget: 500 },
-    { day: "10", spent: 700, budget: 750 },
-    { day: "15", spent: 900, budget: 900 },
-    { day: "20", spent: 1200, budget: 1100 },
-  ];
-  
-  export default function SpendingLineChart() {
+    dashboardApi
+      .rollingAverage(days, today)
+      .then((res) => {
+        console.log("📈 rolling data", res);
+        setData(res);
+      })
+      .catch(console.error);
+  }, [days]);  
+
+  if (!data.length) {
     return (
-      <div className="h-[280px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <XAxis dataKey="day" stroke="#ffffff70" />
-            <YAxis stroke="#ffffff70" />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="budget"
-              stroke="#bef264"
-              strokeDasharray="5 5"
-            />
-            <Line
-              type="monotone"
-              dataKey="spent"
-              stroke="#22c55e"
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="h-full flex items-center justify-center text-white/60">
+        No spending data
       </div>
     );
   }
-  
+
+  return (
+    <div className="h-full px-4 pb-4">
+      <Line
+        data={{
+          labels: data.map(d => d.date),
+          datasets: [
+            {
+              data: data.map(d => d.average),
+              borderColor: "#a3e635",
+              backgroundColor: "rgba(163,230,53,0.25)",
+              tension: 0.35,
+              fill: true,
+              pointRadius: 0,
+            },
+          ],
+        }}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              grid: { color: "rgba(255,255,255,0.08)" },
+              ticks: { color: "rgba(255,255,255,0.6)" },
+            },
+          },
+        }}
+      />
+    </div>
+  );
+}

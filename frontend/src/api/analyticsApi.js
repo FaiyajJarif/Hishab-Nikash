@@ -33,6 +33,15 @@ export const analyticsApi = {
       `/api/analytics/rolling?days=${days}&endDate=${dateISO}`
     );
     return res.data;
-  }
+  },
+
+  cashflow(months = 6) {
+    return apiRequest(`/api/analytics/cashflow?months=${months}`)
+      .then(res => res.data);
+  },
+  dailyCashflow(days = 14) {
+    return apiRequest(`/api/analytics/daily/cashflow?days=${days}`)
+      .then(res => res.data);
+  }  
   
 };

@@ -59,21 +59,33 @@ public class TransactionService {
 
         @Transactional
         public void createExpenseFromRecurringBill(RecurringBill bill) {
-
-                Transaction tx = new Transaction();
-                tx.setUserId(bill.getUserId());
-                tx.setCategoryId(bill.getCategoryId());
-                tx.setType(TransactionType.EXPENSE);
-                tx.setAmount(bill.getAmount());
-                tx.setDate(LocalDate.now());
-                tx.setNote("Auto bill: " + bill.getName());
-
-                repo.save(tx);
-                familySyncService.broadcastUserChange(
-                                bill.getUserId(),
-                                "TRANSACTION_UPDATED",
-                                "💸 A family member added/updated a transaction");
+        
+            if (bill.getCategoryId() == null || bill.getCategoryId() <= 0) {
+                throw new IllegalStateException(
+                    "Recurring bill " + bill.getId() + " has invalid categoryId=" + bill.getCategoryId()
+                );
+            }
+        
+            createExpense(
+                bill.getUserId(),
+                bill.getCategoryId(),
+                bill.getAmount(),
+                LocalDate.now(),
+                "Auto bill: " + bill.getName()
+            );
+            // 🔔 Notify frontend to refresh dashboard
+            notificationPublisher.notifyUser(
+                bill.getUserId(),
+                new NotificationMessage(
+                    "DASHBOARD_REFRESH",
+                    LocalDate.now(),
+                    bill.getAmount(),
+                    "Expense created"
+                )
+            );            
+    
         }
+        
 
         // ✅ CREATE EXPENSE
         // ✅ CREATE EXPENSE

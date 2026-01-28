@@ -1,23 +1,32 @@
 import { useEffect, useState } from "react";
 import { profileApi } from "../../../api/profileApi";
+import { analyticsApi } from "../../../api/analyticsApi";
+import { useOutletContext } from "react-router-dom";
 
 import ProfileHeader from "./ProfileHeader";
 import BudgetSnapshot from "./BudgetSnapshot";
 import PeerComparisonCard from "./PeerComparisonCard";
 import TrendCard from "./TrendCard";
 import AlertsCard from "./AlertsCard";
+import MonthSwitcher from "../family/MonthSwitcher";
+import CategoryDonut from "./CategoryDonut";
+import CashflowChart from "./CashflowChart";
+import { Skeleton } from "../components/Skeleton";
 
-export default function ProgilePage() {
+export default function ProfilePage() {
   const now = new Date();
-  const [month] = useState(now.getMonth() + 1);
-  const [year] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+
+  const { alerts, setAlerts } = useOutletContext();
 
   const [data, setData] = useState(null);
-  const [err, setErr] = useState("");
+  const [cashflow, setCashflow] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
 
   async function load() {
-    setErr("");
     setLoading(true);
     try {
       const res = await profileApi.overview(month, year);
@@ -33,13 +42,32 @@ export default function ProgilePage() {
     load();
   }, [month, year]);
 
-  if (loading) return <div className="text-white/60">Loading profile…</div>;
+  useEffect(() => {
+    if (data?.latestAlerts) {
+      setAlerts(data.latestAlerts);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    profileApi.categoryDonut(month, year).then(setCategories);
+  }, [month, year]);
+
+  useEffect(() => {
+    analyticsApi.cashflow(6).then(setCashflow);
+  }, []);
+
+  if (loading) return <Skeleton />;
+
   if (err) return <Banner text={err} onRetry={load} />;
-  if (!data) return <div className="text-white/60">No profile data.</div>;
 
   return (
     <div className="space-y-8">
       <ProfileHeader user={data.user} persona={data.persona} />
+
+      <MonthSwitcher month={month} year={year} onChange={(m, y) => {
+        setMonth(m);
+        setYear(y);
+      }} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -50,10 +78,16 @@ export default function ProgilePage() {
 
       <TrendCard data={data.trendDelta} />
 
-      <AlertsCard alerts={data.latestAlerts} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CashflowChart data={cashflow} />
+        <CategoryDonut data={categories} />
+      </div>
+
+      <AlertsCard alerts={alerts} />
     </div>
   );
 }
+
 
 /* ---- tiny ui ---- */
 

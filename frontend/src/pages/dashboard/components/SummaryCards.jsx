@@ -1,4 +1,22 @@
 import { motion } from "framer-motion";
+import InfoDot from "./InfoDot";
+
+function getHelpText(label) {
+  switch (label) {
+    case "Income":
+      return "Total income added for the selected period";
+    case "Assigned":
+      return "Money allocated to categories";
+    case "Spent":
+      return "Actual expenses recorded";
+    case "Available":
+      return "Remaining unassigned money";
+    case "Overspent":
+      return "Amount spent beyond assigned budget";
+    default:
+      return "";
+  }
+}
 
 export default function SummaryCards({ totals, mode }) {
   const cards = [
@@ -45,9 +63,10 @@ export default function SummaryCards({ totals, mode }) {
             c.highlight ? "ring-lime-300/30" : "",
           ].join(" ")}
         >
-          <div className="text-xs font-semibold uppercase tracking-wider text-white/60">
-            {c.label}
-          </div>
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/60">
+          {c.label}
+          <InfoDot text={getHelpText(c.label)} />
+        </div>
 
           <div
             className={[

@@ -182,4 +182,33 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
 
       @Query("select t from Transaction t where t.userId = :userId")
     java.util.List<Transaction> findRecentByUserId(@Param("userId") Integer userId, Pageable pageable);
+
+    @Query("""
+    SELECT t.date, COALESCE(SUM(t.amount), 0)
+    FROM Transaction t
+    WHERE t.userId = :userId
+      AND t.type = 'EXPENSE'
+      AND t.date BETWEEN :start AND :end
+    GROUP BY t.date
+""")
+List<Object[]> sumExpensesPerDay(
+    @Param("userId") Integer userId,
+    @Param("start") LocalDate start,
+    @Param("end") LocalDate end
+);
+
+@Query("""
+    SELECT t.date, COALESCE(SUM(t.amount), 0)
+    FROM Transaction t
+    WHERE t.userId = :userId
+      AND t.type = 'INCOME'
+      AND t.date BETWEEN :start AND :end
+    GROUP BY t.date
+""")
+List<Object[]> sumIncomePerDay(
+    @Param("userId") Integer userId,
+    @Param("start") LocalDate start,
+    @Param("end") LocalDate end
+);
+
 }

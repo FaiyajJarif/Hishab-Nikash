@@ -1,6 +1,7 @@
 package com.Eqinox.store.controllers;
 
 import com.Eqinox.store.api.ApiResponse;
+import com.Eqinox.store.dtos.CashflowPointDto;
 import com.Eqinox.store.dtos.analytics.*;
 import com.Eqinox.store.entities.MonthlyAnalyticsSnapshot;
 import com.Eqinox.store.services.AnalyticsService;
@@ -8,6 +9,7 @@ import com.Eqinox.store.services.AuthUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.attribute.UserPrincipal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -181,4 +183,42 @@ public class AnalyticsController {
                 ApiResponse.ok(analyticsService.getMonthHistory(userId))
         );
         }
+
+        @GetMapping("/cashflow")
+        public ResponseEntity<ApiResponse<List<CashflowPointDto>>> cashflow(
+                @RequestHeader("Authorization") String auth,
+                @RequestParam(defaultValue = "6") int months
+        ) {
+        Integer userId = authUserService.requireUserId(auth);
+        return ResponseEntity.ok(
+                ApiResponse.ok(analyticsService.getCashflow(userId, months))
+        );
+        }
+        @GetMapping("/category-donut")
+        public ResponseEntity<ApiResponse<List<CategoryBreakdownDto>>> categoryDonut(
+                @RequestHeader("Authorization") String auth,
+                @RequestParam int month,
+                @RequestParam int year
+        ) {
+        Integer userId = authUserService.requireUserId(auth);
+        return ResponseEntity.ok(
+                ApiResponse.ok(
+                analyticsService.getMonthExpenseByCategory(userId, month, year)
+                )
+        );
+        }
+        @GetMapping("/cashflow/daily")
+public ResponseEntity<ApiResponse<List<DailyCashflowDto>>> getDailyCashflow(
+        @RequestHeader("Authorization") String auth,
+        @RequestParam(defaultValue = "14") int days
+) {
+    Integer userId = authUserService.requireUserId(auth);
+
+    return ResponseEntity.ok(
+        ApiResponse.ok(
+            analyticsService.getDailyCashflow(userId, days)
+        )
+    );
+}
+
 }

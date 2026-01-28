@@ -16,7 +16,10 @@ export default function CategoryDonut({ categories, onInfo }) {
           <div className="text-lg font-extrabold tracking-tight">Category split</div>
           <div className="mt-1 text-xs text-white/60">Where money is going</div>
         </div>
-        <div className="text-xs text-white/60">Tap ℹ️ in list</div>
+        <div className="text-xs text-white/60">Tap 
+        <div className="h-5 w-5 rounded-full bg-lime-300 text-[#061a12] text-xs grid place-items-center cursor-pointer">
+          i
+        </div> in list</div>
       </div>
 
       <div className="mt-4 h-[220px]">
@@ -34,7 +37,9 @@ export default function CategoryDonut({ categories, onInfo }) {
                 className="grid h-7 w-7 place-items-center rounded-xl bg-white/10 ring-1 ring-white/10 hover:bg-white/15 transition"
                 title="Category details"
               >
-                ℹ️
+                <div className="h-5 w-5 rounded-full bg-lime-300 text-[#061a12] text-xs grid place-items-center cursor-pointer">
+                  i
+                </div>
               </button>
             </div>
           </div>

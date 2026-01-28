@@ -10,9 +10,21 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
+    private final UserHandshakeHandler userHandshakeHandler;
+
+    public WebSocketConfig(
+            JwtHandshakeInterceptor jwtHandshakeInterceptor,
+            UserHandshakeHandler userHandshakeHandler) {
+        this.jwtHandshakeInterceptor = jwtHandshakeInterceptor;
+        this.userHandshakeHandler = userHandshakeHandler;
+    }
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
+                .addInterceptors(jwtHandshakeInterceptor)   // 👈 JWT → attributes
+                .setHandshakeHandler(userHandshakeHandler)  // 👈 attributes → Principal
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
@@ -23,5 +35,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/app");
         registry.setUserDestinationPrefix("/user");
     }
-
 }

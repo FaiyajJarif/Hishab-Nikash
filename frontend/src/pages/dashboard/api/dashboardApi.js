@@ -83,4 +83,12 @@ export const dashboardApi = {
   async acceptInvite({ token }) {
     return apiRequest(`/api/family/accept?token=${encodeURIComponent(token)}`);
   },
+
+  async rollingAverage(days, dateISO) {
+    const res = await apiRequest(
+      `/api/analytics/rolling?days=${days}&endDate=${dateISO}`
+    );
+    return res.data;
+  }
+  
 };
