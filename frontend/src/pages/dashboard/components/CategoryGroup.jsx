@@ -37,12 +37,42 @@ export default function CategoryGroup({ title, categories, onInfo, onAssign, onV
             key={c.id ?? `${title}-${idx}`}
             className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10"
           >
-            <div>
-              <div className="font-semibold">{c.name}</div>
-              <div className="text-xs text-white/60">
-                Assigned ₹{c.assigned} · Spent ₹{c.spent}
+            <div className="flex-1">
+              <div className="font-semibold flex items-center gap-2">
+                {c.name}
+                {c.goal?.enabled && (
+                  <span title="Target set" className="text-lime-300 text-sm">
+                    🎯
+                  </span>
+                )}
               </div>
+
+            <div className="text-xs text-white/60">
+              Assigned ₹{c.assigned} · Spent ₹{c.spent}
             </div>
+
+            {/* 🔥 GOAL PROGRESS BAR */}
+            {c.goal?.enabled &&
+              ((c.goal.type === "MONTHLY" && c.goal.monthlyAmount > 0) ||
+              (c.goal.type === "TOTAL" && c.goal.totalAmount > 0)) && (
+                <div className="mt-2 h-1 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full bg-lime-300 transition-all"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        (
+                          c.goal.type === "MONTHLY"
+                            ? (c.assigned / c.goal.monthlyAmount) * 100
+                            : (c.goal.assignedAllTime / c.goal.totalAmount) * 100
+                        )
+                      )}%`,
+                    }}
+                  />
+                </div>
+            )}
+
+          </div>
 
             <button
               onClick={() => onInfo(c)}

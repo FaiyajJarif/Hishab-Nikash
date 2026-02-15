@@ -45,7 +45,7 @@ public class BudgetService {
         this.familySyncService = familySyncService;
         this.familyAuthService = familyAuthService;
         this.familyMemberRepo = familyMemberRepo;
-    }
+        }
 
     // ✅ current month
     public BudgetPeriod getOrCreateCurrentBudget(Integer userId) {
@@ -164,7 +164,7 @@ public class BudgetService {
     }
 
     // ✅ recalc totals
-    private void recalcTotals(BudgetPeriod period) {
+    public void recalcTotals(BudgetPeriod period) {
         BigDecimal planned = budgetItemRepo.sumPlannedForPeriod(period);
 
         BigDecimal actual = budgetItemRepo.sumActualForPeriod(period);

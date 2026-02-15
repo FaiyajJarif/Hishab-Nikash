@@ -21,6 +21,7 @@ import AddRecurringBillModal from "../components/AddRecurringBillModal";
 
 import { useAuth } from "../../../context/AuthContext";
 import { connectUserSocket, disconnectUserSocket  } from "../../../ws/userSocket";
+import RecurringBillsModal from "../components/RecurringBillsModal";
 
 export default function OverviewSection() {
   const [mode, setMode] = useState("month");
@@ -139,6 +140,13 @@ export default function OverviewSection() {
           >
             + Add income
           </button>
+          <button
+            onClick={() => setBillModalOpen(true)}
+            className="flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold ring-1 ring-white/15 hover:bg-white/15 transition"
+          >
+            <span className="text-base">🔁</span>
+            Recurring Bills
+          </button>
         </div>
       </motion.div>
       {/* SUMMARY */}
@@ -215,15 +223,6 @@ export default function OverviewSection() {
           <CategoryDonut categories={flatCategories} onInfo={openCategory} />
           <InsightsPanel totals={data.totals} mode={mode} />
         </div>
-        <RecurringBillsCard categories={flatCategories} />
-
-        <button
-          onClick={() => setBillModalOpen(true)}
-          className="mt-3 rounded-2xl bg-white/10 px-4 py-2 text-sm"
-        >
-          + Add recurring bill
-        </button>
-
         <AddRecurringBillModal
           open={billModalOpen}
           onClose={() => setBillModalOpen(false)}
@@ -266,6 +265,11 @@ export default function OverviewSection() {
         open={incomeOpen}
         onClose={() => setIncomeOpen(false)}
         date={date}
+      />
+      <RecurringBillsModal
+        open={billModalOpen}
+        onClose={() => setBillModalOpen(false)}
+        categories={flatCategories}
       />
     </>
   );

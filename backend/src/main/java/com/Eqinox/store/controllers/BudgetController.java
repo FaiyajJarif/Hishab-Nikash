@@ -4,6 +4,7 @@ import com.Eqinox.store.api.ApiResponse;
 import com.Eqinox.store.dtos.CategoryTargetRequest;
 import com.Eqinox.store.dtos.DashboardSummaryDto;
 import com.Eqinox.store.dtos.MoveMoneyRequest;
+import com.Eqinox.store.dtos.SpendRequest;
 import com.Eqinox.store.dtos.budget.BudgetIncomeRequest;
 import com.Eqinox.store.dtos.budget.BudgetPlanRequest;
 import com.Eqinox.store.dtos.budget.BudgetTargetRequest;
@@ -11,6 +12,8 @@ import com.Eqinox.store.entities.BudgetPeriod;
 import com.Eqinox.store.services.AuthUserService;
 import com.Eqinox.store.services.BudgetService;
 import com.Eqinox.store.services.CategoryTargetService;
+import com.Eqinox.store.services.TransactionService;
+
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,15 +25,18 @@ public class BudgetController {
     private final BudgetService budgetService;
     private final AuthUserService authUserService;
     private final CategoryTargetService categoryTargetService;
+    private final TransactionService transactionService;
 
     public BudgetController(
             BudgetService budgetService,
             AuthUserService authUserService,
-            CategoryTargetService categoryTargetService
+            CategoryTargetService categoryTargetService,
+            TransactionService transactionService
     ) {
         this.budgetService = budgetService;
         this.authUserService = authUserService;
         this.categoryTargetService = categoryTargetService;
+        this.transactionService = transactionService;
     }
 
     @GetMapping("/summary")
@@ -106,13 +112,30 @@ public class BudgetController {
     }
 
     @PostMapping("/target")
-public ResponseEntity<ApiResponse<Void>> target(
-    @RequestHeader("Authorization") String auth,
-    @Valid @RequestBody CategoryTargetRequest req
-) {
-    authUserService.getUserId(auth);
-    categoryTargetService.saveTarget(req);
-    return ResponseEntity.ok(ApiResponse.ok());
-}
+    public ResponseEntity<ApiResponse<Void>> target(
+        @RequestHeader("Authorization") String auth,
+        @Valid @RequestBody CategoryTargetRequest req
+    ) {
+        authUserService.getUserId(auth);
+        categoryTargetService.saveTarget(req);
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
 
+    @PostMapping("/spend")
+    public ResponseEntity<ApiResponse<Void>> spend(
+            @RequestHeader("Authorization") String auth,
+            @Valid @RequestBody SpendRequest req
+    ) {
+        Integer userId = authUserService.getUserId(auth);
+
+        transactionService.createExpense(
+                userId,
+                req.getCategoryId(),
+                req.getAmount(),
+                java.time.LocalDate.of(req.getYear(), req.getMonth(), 1),
+                req.getNote()
+        );
+
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
 }

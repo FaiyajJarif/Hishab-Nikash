@@ -38,15 +38,15 @@ export const dashboardApi = {
       },
     
       addTransaction(payload) {
-        return apiRequest("/api/transactions/expense", {
+        return apiRequest("/api/budget/spend", {
           method: "POST",
           body: payload,
         });
-      },
+      },      
     
       listRecurringBills() {
         return apiRequest("/api/recurring-bills");
-      },
+      },      
   // Overview dashboard (totals + series + categories)
   async getOverview({ mode, dateISO }) {
     // Example endpoint: /api/dashboard/overview?mode=month&date=2026-01-19

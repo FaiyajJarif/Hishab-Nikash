@@ -15,91 +15,89 @@ export function useDashboardData({ mode, date }) {
       const month = date.getMonth() + 1;
       const year = date.getFullYear();
 
-      /* -------- CATEGORIES -------- */
+      /* ✅ 1. FETCH CATEGORIES */
       const catRes = await apiRequest(
         `/api/dashboard/categories?month=${month}&year=${year}`
       );
 
-      const grouped = Object.entries(catRes.data).map(
-        ([type, list]) => ({
-          title: type,
-          items: list.map((c) => ({
+      /* ✅ 2. FETCH TRANSACTIONS */
+      const txRes = await apiRequest(`/api/transactions/recent?limit=200`);
+
+      const transactions = txRes.data ?? [];
+
+      /* ✅ 3. BUILD SPENT MAP (categoryId → total spent) */
+      const spentMap = {};
+
+      transactions.forEach((tx) => {
+        if (tx.type !== "EXPENSE") return;
+
+        spentMap[tx.categoryId] =
+          (spentMap[tx.categoryId] ?? 0) + Number(tx.amount);
+      });
+
+      /* ✅ 4. BUILD CATEGORY GROUPS WITH REAL SPENT */
+      const grouped = Object.entries(catRes.data).map(([type, list]) => ({
+        title: type,
+        items: list.map((c) => {
+          const spent = spentMap[c.id] ?? 0;
+
+          return {
             id: c.id,
             name: c.name,
             type,
-          
-            // category-level
+
             assigned: Number(c.planned),
             available: Number(c.available),
-            spent: c.available < 0 ? Math.abs(Number(c.available)) : 0,
-          
-            // 🔥 summary-level (DO NOT DROP)
+
+            /* ✅ REAL SPENT */
+            spent,
+
+            overspent:
+              Number(c.available) < 0
+                ? Math.abs(Number(c.available))
+                : 0,
+
             monthIncome: Number(c.monthIncome),
             totalAssigned: Number(c.assigned),
+
             goal:
-            c.target > 0 || c.totalTargetAmount > 0
-              ? {
-                  enabled: true,
-                  monthlyAmount: Number(c.target ?? 0),
-                  type: c.frequency === "TOTAL" ? "TOTAL" : "MONTHLY",
-                  totalAmount: Number(c.totalTargetAmount ?? 0),
-                  assignedThisMonth: Number(c.planned),
-                  assignedAllTime: Number(c.totalAssignedAllTime ?? 0),
-                }
-              : { enabled: false },
-          })),
-        })
-      );
+              c.target > 0 || c.totalTargetAmount > 0
+                ? {
+                    enabled: true,
+                    monthlyAmount: Number(c.target ?? 0),
+                    type: c.frequency === "TOTAL" ? "TOTAL" : "MONTHLY",
+                    totalAmount: Number(c.totalTargetAmount ?? 0),
+                    assignedThisMonth: Number(c.planned),
+                    assignedAllTime: Number(c.totalAssignedAllTime ?? 0),
+                  }
+                : { enabled: false },
+          };
+        }),
+      }));
 
       const flatCategories = grouped.flatMap((g) => g.items);
 
-      /* -------- TOTALS -------- */
+      /* ✅ TOTALS */
       const first = flatCategories[0] ?? {};
-
       const income = Number(first.monthIncome ?? 0);
       const assigned = Number(first.totalAssigned ?? 0);
 
       const totals = {
         income,
         assigned,
-        available: income - assigned, // ✅ now works
+        available: income - assigned,
+
+        /* ✅ TOTAL SPENT */
         spent: flatCategories.reduce((sum, c) => sum + c.spent, 0),
+
         overspent: flatCategories.reduce(
-          (sum, c) => sum + (c.available < 0 ? Math.abs(c.available) : 0),
+          (sum, c) => sum + c.overspent,
           0
         ),
       };
 
-      /* -------- SERIES -------- */
-      let series = [];
-
-      if (mode === "month") {
-        const trend = await apiRequest(
-          `/api/analytics/month/trend?month=${month}&year=${year}`
-        );
-
-        series =
-          trend.data?.weeks?.map((w, i) => ({
-            label: `W${i + 1}`,
-            income: Number(w.income ?? 0),
-            expense: Number(w.expense ?? 0),
-          })) ?? [];
-      } else {
-        const daily = await apiRequest(
-          `/api/analytics/daily?date=${date.toISOString().slice(0, 10)}`
-        );
-
-        series = [
-          {
-            label: "Today",
-            income: Number(daily.data.income),
-            expense: Number(daily.data.expense),
-          },
-        ];
-      }
-
       setGroups(grouped);
-      setData({ categories: flatCategories, totals, series });
+      setData({ categories: flatCategories, totals });
     } catch (e) {
       console.error(e);
       setError("Failed to load dashboard data");
@@ -108,12 +106,12 @@ export function useDashboardData({ mode, date }) {
     }
   }, [mode, date]);
 
-  // 🔹 initial load
+  /* ✅ INITIAL LOAD */
   useEffect(() => {
     load();
   }, [load]);
 
-  // 🔹 refresh listener (THIS FIXES ASSIGN MONEY UI)
+  /* ✅ REFRESH EVENT */
   useEffect(() => {
     const refresh = () => load();
     window.addEventListener("dashboard-refresh", refresh);

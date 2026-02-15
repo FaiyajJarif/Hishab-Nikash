@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { dashboardApi } from "../api/dashboardApi";
 import TargetModal from "./TargetModal";
+import SpendModal from "./SpendModal";
 
 export default function CategoryDrawer({ open, category, month, year, onClose }) {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [targetOpen, setTargetOpen] = useState(false);
+  const [spendOpen, setSpendOpen] = useState(false);
 
   useEffect(() => {
     if (!open || !category?.id) return;
@@ -64,7 +66,12 @@ export default function CategoryDrawer({ open, category, month, year, onClose })
                 value={money(c?.available)}
                 emphasis={c?.available < 0 ? "bad" : "good"}
               />
-
+              <button
+              onClick={() => setSpendOpen(true)}
+              className="mt-4 w-full rounded-2xl bg-red-400/20 px-4 py-3 text-red-200 hover:bg-red-400/30 transition"
+            >
+              + Add spent
+            </button>
 <div className="rounded-3xl bg-white/5 p-4 ring-1 ring-white/10">
   <div className="text-xs font-semibold uppercase tracking-wider text-white/60">
     Goal
@@ -162,8 +169,24 @@ export default function CategoryDrawer({ open, category, month, year, onClose })
             month={month}
             year={year}
           />
+          <SpendModal
+            open={spendOpen}
+            onClose={() => setSpendOpen(false)}
+            onSuccess={() => {
+              dashboardApi
+                .getCategoryDetails({
+                  categoryId: category.id,
+                  mode: "month",
+                  dateISO: new Date().toISOString().slice(0, 10),
+                })
+                .then(setDetails);
+            }}
+            category={c}
+            month={month}
+            year={year}
+          />
         </>
-      ) : null}
+      ) : null}  
     </AnimatePresence>
   );
 }
