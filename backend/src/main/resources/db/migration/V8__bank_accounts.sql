@@ -1,0 +1,24 @@
+-- CREATE TABLE bank_accounts (
+--     bank_account_id SERIAL PRIMARY KEY,
+--     user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+--     provider VARCHAR(30) NOT NULL,
+--     account_number VARCHAR(100) NOT NULL,
+--     mock_balance NUMERIC(18,2) NOT NULL DEFAULT 0,
+--     linked BOOLEAN NOT NULL DEFAULT TRUE,
+--     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- CREATE INDEX idx_bank_user ON bank_accounts(user_id);
+-- ALTER TABLE transactions
+-- ADD COLUMN payment_method VARCHAR(20);
+-- SELECT * FROM wallets;
+-- SELECT * FROM users;
+-- SELECT * FROM wallets;
+-- SELECT * FROM wallet_ledger_entries;
+-- ALTER TABLE wallet_ledger_entries
+-- ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS';
+-- ALTER TABLE wallets
+-- ADD COLUMN daily_limit NUMERIC(18,2) DEFAULT 20000;
+-- ALTER TABLE wallet_ledger_entries
+-- ADD CONSTRAINT uq_wallet_reference UNIQUE (reference_id);
+SELECT * FROM users;

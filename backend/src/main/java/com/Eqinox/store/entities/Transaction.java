@@ -30,6 +30,9 @@ public class Transaction {
     private LocalDate date;
 
     private String note;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    private PaymentMethod paymentMethod;
 
     // ---------- getters ----------
     public Integer getTransactionId() { return transactionId; }
@@ -39,6 +42,7 @@ public class Transaction {
     public BigDecimal getAmount() { return amount; }
     public LocalDate getDate() { return date; }
     public String getNote() { return note; }
+    public PaymentMethod getPaymentMethod() { return paymentMethod; }
 
     // ---------- setters ----------
     public void setUserId(Integer userId) { this.userId = userId; }
@@ -47,4 +51,5 @@ public class Transaction {
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public void setDate(LocalDate date) { this.date = date; }
     public void setNote(String note) { this.note = note; }
+    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
 }

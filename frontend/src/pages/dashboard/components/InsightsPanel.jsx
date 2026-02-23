@@ -33,9 +33,6 @@ export default function InsightsPanel({ totals, mode }) {
       </div>
 
       <div className="mt-4 space-y-2 text-sm text-white/70">
-        <div>• Add “Daily analytics” button → opens a daily analytics page/modal.</div>
-        <div>• At month end: show popup with totals + trend comparisons.</div>
-        <div>• Manual month close button can live near the date selector.</div>
       </div>
     </motion.div>
   );

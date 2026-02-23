@@ -40,4 +40,12 @@ public class ApiResponse<T> {
     public ApiError getError() {
         return error;
     }
+
+    public static ApiResponse<Void> error(String code, String message) {
+        return new ApiResponse<>(
+                false,
+                null,
+                new ApiError(code, message)
+        );
+    }    
 }

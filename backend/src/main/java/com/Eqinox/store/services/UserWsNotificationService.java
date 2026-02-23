@@ -4,8 +4,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
-import com.Eqinox.store.dtos.alerts.AlertEventDto;
-
 @Slf4j
 @Service
 public class UserWsNotificationService {

@@ -40,7 +40,8 @@ public class TransactionController {
                 req.getCategoryId(),
                 req.getAmount(),
                 req.getDate(),
-                req.getNote()
+                req.getNote(),
+                req.getPaymentMethod()
         );
 
         return ResponseEntity.ok(ApiResponse.ok());

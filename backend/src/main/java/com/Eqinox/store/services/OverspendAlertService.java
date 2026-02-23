@@ -3,8 +3,6 @@ package com.Eqinox.store.services;
 import com.Eqinox.store.websocket.NotificationMessage;
 import com.Eqinox.store.websocket.NotificationPublisher;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Service

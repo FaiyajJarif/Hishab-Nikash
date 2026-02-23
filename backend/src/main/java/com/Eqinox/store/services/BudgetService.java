@@ -255,5 +255,10 @@ public class BudgetService {
     
         budgetItemRepo.save(from);
         budgetItemRepo.save(to);
-    }    
+    }  
+    public BudgetPeriod getBudgetIfExists(Integer userId, Integer month, Integer year) {
+        return budgetPeriodRepo
+                .findByUserIdAndMonthAndYear(userId, month, year)
+                .orElse(null);
+    }  
 }

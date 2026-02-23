@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { dashboardApi } from "../api/dashboardApi";
+import { walletApi } from "../../../api/walletApi";
+import { bankingApi } from "../../../api/bankingApi";
 
 export default function SpendModal({
   open,
   onClose,
-  onSuccess, 
+  onSuccess,
   category,
   month,
   year,
@@ -12,14 +14,37 @@ export default function SpendModal({
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("WALLET");
+  const [wallet, setWallet] = useState(null);
+  const [banks, setBanks] = useState([]);
 
+  // ✅ ALL HOOKS FIRST
+  useEffect(() => {
+    if (!open) return;
+
+    async function loadData() {
+      try {
+        const w = await walletApi.getWallet();
+        setWallet(w.data);
+
+        const b = await bankingApi.getBanks();
+        setBanks(b.data);
+      } catch (e) {
+        console.error("Failed loading balances");
+      }
+    }
+
+    loadData();
+  }, [open]);
+
+  // ✅ CONDITIONAL RENDER AFTER HOOKS
   if (!open) return null;
 
   async function submit() {
     if (!amount || Number(amount) <= 0) return;
-  
+
     setLoading(true);
-  
+
     try {
       await dashboardApi.addTransaction({
         categoryId: category.id,
@@ -27,8 +52,9 @@ export default function SpendModal({
         month,
         year,
         note,
+        paymentMethod,
       });
-  
+
       window.dispatchEvent(new Event("dashboard-refresh"));
       if (onSuccess) onSuccess();
       onClose();
@@ -37,7 +63,7 @@ export default function SpendModal({
     } finally {
       setLoading(false);
     }
-  }  
+  }
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 grid place-items-center">
@@ -60,6 +86,44 @@ export default function SpendModal({
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
+
+        {/* PAYMENT METHOD */}
+        <div className="mt-4">
+          <div className="text-sm text-white/70 mb-2">
+            Payment Method
+          </div>
+
+          <div className="flex gap-2">
+            {["WALLET", "BANK"].map((method) => (
+              <button
+                key={method}
+                type="button"
+                onClick={() => setPaymentMethod(method)}
+                className={`flex-1 rounded-2xl px-4 py-2 text-sm transition ${
+                  paymentMethod === method
+                    ? "bg-lime-300 text-[#061a12] font-semibold"
+                    : "bg-white/10 text-white/70 ring-1 ring-white/15"
+                }`}
+              >
+                {method}
+              </button>
+            ))}
+          </div>
+
+          {/* BALANCE DISPLAY */}
+          {paymentMethod === "WALLET" && wallet && (
+            <div className="mt-2 text-xs text-lime-200">
+              Wallet Balance: ৳{Number(wallet.balance).toLocaleString()}
+            </div>
+          )}
+
+          {paymentMethod === "BANK" && banks.length > 0 && (
+            <div className="mt-2 text-xs text-blue-200">
+              Bank Balance: ৳
+              {Number(banks[0].mockBalance).toLocaleString()}
+            </div>
+          )}
+        </div>
 
         <div className="mt-5 flex gap-3">
           <button

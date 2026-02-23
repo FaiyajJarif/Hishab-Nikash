@@ -26,6 +26,10 @@ public class ApiError {
     public static ApiError of(String code, String message, int status, String path) {
         return new ApiError(code, message, status, path, Instant.now());
     }
+    public ApiError(String code, String message) {
+        this.code = code;
+        this.message = message;
+    }    
 
     public String getCode() { return code; }
     public String getMessage() { return message; }

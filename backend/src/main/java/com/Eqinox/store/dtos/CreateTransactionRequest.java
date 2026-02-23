@@ -8,6 +8,7 @@ public class CreateTransactionRequest {
     private Integer categoryId;
     private BigDecimal amount;
     private LocalDate date;
+    private String paymentMethod;
     private String note;
 
     public Integer getCategoryId() {
@@ -25,4 +26,12 @@ public class CreateTransactionRequest {
     public String getNote() {
         return note;
     }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+    
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }    
 }
