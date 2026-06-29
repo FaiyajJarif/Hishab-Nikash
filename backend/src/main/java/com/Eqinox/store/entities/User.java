@@ -25,8 +25,10 @@ public class User {
     @Column(name = "google_id", length = 255)
     private String googleId;
 
-    @Column(name = "role", length = 20)
-    private String role = "NORMAL_USER";
+    // ✅ CHANGED: was  private String role = "NORMAL_USER";
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 20, nullable = false)
+    private Role role = Role.USER;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
@@ -93,11 +95,13 @@ public class User {
         this.googleId = googleId;
     }
 
-    public String getRole() {
+    // ✅ CHANGED: return type String -> Role
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    // ✅ CHANGED: param type String -> Role
+    public void setRole(Role role) {
         this.role = role;
     }
 
@@ -156,9 +160,11 @@ public class User {
     public void setIsVerified(Boolean isVerified) {
         this.isVerified = isVerified;
     }
+
     public Boolean getOnboardingCompleted() {
         return onboardingCompleted;
     }
+
     public void setOnboardingCompleted(Boolean onboardingCompleted) {
         this.onboardingCompleted = onboardingCompleted;
     }

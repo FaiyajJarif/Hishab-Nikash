@@ -2,6 +2,7 @@ package com.Eqinox.store.controllers;
 
 import com.Eqinox.store.dtos.*;
 import com.Eqinox.store.entities.EmailVerificationToken;
+import com.Eqinox.store.entities.Role;   // ✅ ADDED
 import com.Eqinox.store.entities.User;
 import com.Eqinox.store.repositories.EmailVerificationTokenRepository;
 import com.Eqinox.store.repositories.UserRepository;
@@ -62,11 +63,11 @@ public class AuthApiController {
                     .body(new AuthResponse(false, "Please verify your email before logging in.", null));
         }
 
-        // ✅ Generate JWT
+        // ✅ Generate JWT — role is now an enum, so pass its name() (e.g. "USER")
         String token = jwtService.generateToken(
                 user.getEmail(),
                 user.getUserId(),
-                user.getRole(),
+                user.getRole().name(),   // ✅ CHANGED: was user.getRole()
                 rememberMe);
 
         return ResponseEntity.ok(new AuthResponse(true, "Login successful", token));
@@ -122,7 +123,7 @@ public class AuthApiController {
             user.setBudgetStartDay(budgetStartDay);
         }
 
-        user.setRole("NORMAL_USER");
+        user.setRole(Role.USER);   // ✅ CHANGED: was user.setRole("NORMAL_USER");
         user.setSubscriptionId(1); // free trial
         user.setCreatedAt(OffsetDateTime.now());
         user.setUpdatedAt(OffsetDateTime.now());
