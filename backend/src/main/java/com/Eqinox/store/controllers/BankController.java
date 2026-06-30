@@ -7,6 +7,7 @@ import com.Eqinox.store.entities.*;
 import com.Eqinox.store.repositories.*;
 import com.Eqinox.store.services.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;   // ✅ ADDED
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -122,36 +123,36 @@ public class BankController {
             @RequestHeader("Authorization") String auth,
             @RequestBody Map<String, String> body
     ) {
-    
+
         Integer userId = authUserService.getUserId(auth);
-    
+
         Integer bankAccountId =
                 Integer.valueOf(body.get("bankAccountId"));
-    
+
         BigDecimal amount =
                 new BigDecimal(body.get("amount"));
-    
+
         BankAccount account = bankRepo.findById(bankAccountId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Bank account not found"));
-    
+
         boolean linked = userBankLinkRepo
                 .existsByUserIdAndBankAccount(userId, account);
-    
+
         if (!linked) {
             throw new IllegalStateException("Bank account not linked");
         }
-    
+
         bankSyncService.processTopUpAsync(
                 userId,
                 bankAccountId,
                 amount
         );
-    
+
         return ResponseEntity.ok(
                 ApiResponse.ok("Bank top-up is processing")
         );
-    }    
+    }
 
     @GetMapping("/transactions")
     public ResponseEntity<ApiResponse<List<BankTransactionDTO>>> listTransactions(
@@ -177,6 +178,8 @@ public class BankController {
         return ResponseEntity.ok(ApiResponse.ok(txns));
     }
 
+    // ⚠️ ADMIN-ONLY: directly inflates a bank's mock balance
+    @PreAuthorize("hasRole('ADMIN')")   // ✅ ADDED
     @PostMapping("/admin/fund")
     public ResponseEntity<ApiResponse<String>> fundBank(
             @RequestBody Map<String, String> body
@@ -203,22 +206,23 @@ public class BankController {
         );
     }
 
+    // ⚠️ ADMIN-ONLY: external deposit into any account (mock/seed tool)
+    @PreAuthorize("hasRole('ADMIN')")   // ✅ ADDED
     @PostMapping("/deposit")
-        public ResponseEntity<ApiResponse<String>> depositToBank(
-                @RequestBody Map<String, String> body
-        ) {
+    public ResponseEntity<ApiResponse<String>> depositToBank(
+            @RequestBody Map<String, String> body
+    ) {
 
-                BankProvider provider =
+        BankProvider provider =
                 BankProvider.valueOf(body.get("provider"));
-        
+
         String accountNumber =
                 body.get("accountNumber");
-        
+
         BankAccount account = bankRepo
                 .findByProviderAndAccountNumber(provider, accountNumber)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Bank account not found"));
-        
 
         BigDecimal amount =
                 new BigDecimal(body.get("amount"));
@@ -226,21 +230,23 @@ public class BankController {
         String description =
                 body.getOrDefault("description", "External deposit");
 
-                bankSyncService.depositToBank(
-                        account.getBankAccountId(),
-                        amount,
-                        description
-                );                
+        bankSyncService.depositToBank(
+                account.getBankAccountId(),
+                amount,
+                description
+        );
 
         return ResponseEntity.ok(
                 ApiResponse.ok("Deposit successful")
         );
-        }
+    }
 
-        @PostMapping("/transfer")
-        public ResponseEntity<ApiResponse<String>> transferBetweenBanks(
-                @RequestBody Map<String, String> body
-        ) {
+    // ⚠️ ADMIN-ONLY: moves money between any two banks (mock/seed tool)
+    @PreAuthorize("hasRole('ADMIN')")   // ✅ ADDED
+    @PostMapping("/transfer")
+    public ResponseEntity<ApiResponse<String>> transferBetweenBanks(
+            @RequestBody Map<String, String> body
+    ) {
 
         BankProvider fromProvider =
                 BankProvider.valueOf(body.get("fromProvider"));
@@ -268,71 +274,73 @@ public class BankController {
         return ResponseEntity.ok(
                 ApiResponse.ok("Transfer successful")
         );
-        }
-
-        @PostMapping("/withdraw")
-        public ResponseEntity<ApiResponse<String>> withdrawToBank(
-                @RequestHeader("Authorization") String auth,
-                @RequestBody Map<String, String> body
-        ) {
-        
-            Integer userId = authUserService.getUserId(auth);
-        
-            BankProvider provider =
-                    BankProvider.valueOf(body.get("provider"));
-        
-            String accountNumber =
-                    body.get("accountNumber");
-        
-            BigDecimal amount =
-                    new BigDecimal(body.get("amount"));
-        
-            bankSyncService.withdrawToBank(
-                    userId,
-                    provider,
-                    accountNumber,
-                    amount
-            );
-        
-            return ResponseEntity.ok(
-                    ApiResponse.ok("Withdrawal successful")
-            );
-        }  
-        @PostMapping("/mock/create")
-public ResponseEntity<ApiResponse<String>> createMockBank(
-        @RequestHeader("Authorization") String auth,
-        @RequestBody Map<String, String> body
-) {
-
-    BankProvider provider =
-            BankProvider.valueOf(body.get("provider"));
-
-    String accountNumber = body.get("accountNumber");
-
-    if (bankRepo
-        .findByProviderAndAccountNumber(provider, accountNumber)
-        .isPresent()) {
-
-        throw new IllegalStateException("Account already exists for this provider");
     }
 
-    String ownerName = body.get("ownerName");
+    @PostMapping("/withdraw")
+    public ResponseEntity<ApiResponse<String>> withdrawToBank(
+            @RequestHeader("Authorization") String auth,
+            @RequestBody Map<String, String> body
+    ) {
 
-    BigDecimal initialBalance =
-            new BigDecimal(body.getOrDefault("balance", "0"));
+        Integer userId = authUserService.getUserId(auth);
 
-    BankAccount account = new BankAccount();
-    account.setProvider(provider);
-    account.setAccountNumber(accountNumber);
-    account.setOwnerName(ownerName);
-    account.setPin("1234");
-    account.setMockBalance(initialBalance);
+        BankProvider provider =
+                BankProvider.valueOf(body.get("provider"));
 
-    bankRepo.save(account);
+        String accountNumber =
+                body.get("accountNumber");
 
-    return ResponseEntity.ok(
-            ApiResponse.ok("Mock bank account created")
-    );
-}
-   
+        BigDecimal amount =
+                new BigDecimal(body.get("amount"));
+
+        bankSyncService.withdrawToBank(
+                userId,
+                provider,
+                accountNumber,
+                amount
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.ok("Withdrawal successful")
+        );
+    }
+
+    // ⚠️ ADMIN-ONLY: seeds a mock bank account
+    @PreAuthorize("hasRole('ADMIN')")   // ✅ ADDED
+    @PostMapping("/mock/create")
+    public ResponseEntity<ApiResponse<String>> createMockBank(
+            @RequestHeader("Authorization") String auth,
+            @RequestBody Map<String, String> body
+    ) {
+
+        BankProvider provider =
+                BankProvider.valueOf(body.get("provider"));
+
+        String accountNumber = body.get("accountNumber");
+
+        if (bankRepo
+            .findByProviderAndAccountNumber(provider, accountNumber)
+            .isPresent()) {
+
+            throw new IllegalStateException("Account already exists for this provider");
+        }
+
+        String ownerName = body.get("ownerName");
+
+        BigDecimal initialBalance =
+                new BigDecimal(body.getOrDefault("balance", "0"));
+
+        BankAccount account = new BankAccount();
+        account.setProvider(provider);
+        account.setAccountNumber(accountNumber);
+        account.setOwnerName(ownerName);
+        account.setPin("1234");
+        account.setMockBalance(initialBalance);
+
+        bankRepo.save(account);
+
+        return ResponseEntity.ok(
+                ApiResponse.ok("Mock bank account created")
+        );
+    }
 }
