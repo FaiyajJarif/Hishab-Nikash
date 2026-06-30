@@ -4,6 +4,7 @@ import com.Eqinox.store.exceptions.BusinessException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,10 +20,8 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .orElse("Validation failed");
-
         ApiError err = ApiError.of("VALIDATION_ERROR", msg, 400, req.getRequestURI());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(err));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(err));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -31,8 +30,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest req
     ) {
         ApiError err = ApiError.of("BAD_REQUEST", e.getMessage(), 400, req.getRequestURI());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(err));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(err));
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -41,8 +39,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest req
     ) {
         ApiError err = ApiError.of("CONFLICT", e.getMessage(), 409, req.getRequestURI());
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiResponse.fail(err));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.fail(err));
     }
 
     @ExceptionHandler(BusinessException.class)
@@ -50,14 +47,23 @@ public class GlobalExceptionHandler {
             BusinessException e,
             HttpServletRequest req
     ) {
+        ApiError err = ApiError.of("BUSINESS_RULE_VIOLATION", e.getMessage(), 409, req.getRequestURI());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.fail(err));
+    }
+
+    // --- THE FIX: access-denied (@PreAuthorize failures) -> 403, not 500 ---
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> forbidden(
+            AccessDeniedException e,
+            HttpServletRequest req
+    ) {
         ApiError err = ApiError.of(
-                "BUSINESS_RULE_VIOLATION",
-                e.getMessage(),
-                409,
+                "FORBIDDEN",
+                "You do not have permission to perform this action",
+                403,
                 req.getRequestURI()
         );
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiResponse.fail(err));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.fail(err));
     }
 
     @ExceptionHandler(Exception.class)
@@ -65,13 +71,7 @@ public class GlobalExceptionHandler {
             Exception e,
             HttpServletRequest req
     ) {
-        ApiError err = ApiError.of(
-                "INTERNAL_ERROR",
-                "Internal server error",
-                500,
-                req.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.fail(err));
+        ApiError err = ApiError.of("INTERNAL_ERROR", "Internal server error", 500, req.getRequestURI());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.fail(err));
     }
 }

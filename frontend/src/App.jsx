@@ -20,6 +20,8 @@ import RecurringBillsDashboard from "./pages/dashboard/sections/RecurringBillsDa
 import FamilyHome from "./pages/dashboard/family/FamilyHome";
 import ProfilePage from "./pages/dashboard/profile/ProfilePage";
 
+import AdminPage from "./pages/admin/AdminPage";
+
 export default function App() {
   return (
     <AuthProvider>
@@ -61,6 +63,14 @@ export default function App() {
              <Route path="banking" element={<BankingDashboard />} />
             <Route path="subscriptions" element={<RecurringBillsDashboard />} />
           </Route>
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
